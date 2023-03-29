@@ -4,10 +4,7 @@ import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Objects;
 
-import kanban.models.Epic;
-import kanban.models.Subtask;
-import kanban.models.Task;
-import kanban.models.TaskStatus;
+import kanban.models.*;
 
 /**
  * Менеджер по управлению классами
@@ -19,16 +16,16 @@ public class TaskManager {
     private HashMap<Integer, Task> tasks = new HashMap<>();
 
 
-    public HashMap<Integer, Epic> getEpics() {
-        return epics;
+    public ArrayList<Epic> getEpics() {
+        return new ArrayList<>(epics.values());
     }
 
-    public HashMap<Integer, Subtask> getSubtasks() {
-        return subtasks;
+    public ArrayList<Subtask> getSubtasks() {
+        return new ArrayList<>(subtasks.values());
     }
 
-    public HashMap<Integer, Task> getTasks() {
-        return tasks;
+    public ArrayList<Task> getTasks() {
+        return new ArrayList<>(tasks.values());
     }
 
     /**
@@ -87,9 +84,8 @@ public class TaskManager {
      * Полное удаление всех {@link Epic}
      */
     public void clearEpics() {
-        for (var epic : epics.keySet()) {
-            deleteEpicById(epic);
-        }
+        subtasks.clear();
+        epics.clear();
     }
 
     /**
@@ -234,6 +230,7 @@ public class TaskManager {
             return;
         }
 
+        // Если тут не объявить копию коллекции, то при переборе выдаст ConcurrentModificationException
         var subtaskValues = new HashMap<Integer, Subtask>(subtasks);
 
         for (var subtask : subtaskValues.values()) {
@@ -255,27 +252,36 @@ public class TaskManager {
     }
 
     /**
-     * Проверка на выполнение всех {@link Subtask} у {@link Epic}
-     *
+     * Проверка статусов всех {@link Subtask} в {@link Epic}
      * @param epicId Id объекта
-     * @return Результат проверки
+     * @return Статус
      */
-    private boolean isSubtasksDone(int epicId) {
+    private SubtasksStatus checkEpicForStatus(int epicId) {
         ArrayList<Subtask> subtasksByEpic = getSubtasksByEpic(epicId);
         int subtaskCount = subtasksByEpic.size();
-        int subtaskDoneCounts = 0;
+        int subtaskDoneCount = 0;
+        int subtaskInProgressCount = 0;
 
         if (subtaskCount == 0) {
-            return true;
+            return SubtasksStatus.SUBTASKS_DONE;
         }
 
         for (Subtask subtask : subtasksByEpic) {
             if (subtask.getStatus() == TaskStatus.DONE) {
-                subtaskDoneCounts++;
+                subtaskDoneCount++;
+            }
+            if (subtask.getStatus() == TaskStatus.IN_PROGRESS) {
+                subtaskInProgressCount++;
             }
         }
 
-        return subtaskDoneCounts == subtaskCount;
+        if (subtaskDoneCount == subtaskCount) {
+            return SubtasksStatus.SUBTASKS_DONE;
+        } else if (subtaskInProgressCount >= 1 || subtaskDoneCount >= 1) {
+            return SubtasksStatus.ONE_IN_PROGRESS;
+        } else {
+            return SubtasksStatus.NONE_SUBTASKS_DONE_OR_IN_PROGRESS;
+        }
     }
 
     /**
@@ -284,11 +290,26 @@ public class TaskManager {
      * @param epicId Id объекта
      */
     private void setEpicStatus(int epicId) {
-        if (isSubtasksDone(epicId)) {
-            epics.get(epicId).setStatus(TaskStatus.DONE);
-        } else {
-            epics.get(epicId).setStatus(TaskStatus.NEW);
+
+        switch (checkEpicForStatus(epicId)) {
+            case SUBTASKS_DONE:
+                epics.get(epicId).setStatus(TaskStatus.DONE);
+                break;
+            case ONE_IN_PROGRESS:
+                epics.get(epicId).setStatus(TaskStatus.IN_PROGRESS);
+                break;
+            case NONE_SUBTASKS_DONE_OR_IN_PROGRESS:
+                epics.get(epicId).setStatus(TaskStatus.NEW);
+                break;
         }
+
+//        if (isSubtasksDone(epicId)) {
+//            epics.get(epicId).setStatus(TaskStatus.DONE);
+//        } else if (isEpicInProgress(epicId)) {
+//            epics.get(epicId).setStatus(TaskStatus.IN_PROGRESS);
+//        } else {
+//            epics.get(epicId).setStatus(TaskStatus.NEW);
+//        }
     }
 
     /**
