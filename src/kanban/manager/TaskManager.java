@@ -230,11 +230,10 @@ public class TaskManager {
             return;
         }
 
-        // Если тут не объявить копию коллекции, то при переборе выдаст ConcurrentModificationException
-        var subtaskValues = new HashMap<Integer, Subtask>(subtasks);
+        subtasks.clear();
 
-        for (var subtask : subtaskValues.values()) {
-            deleteSubtaskById(subtask.getId());
+        for (var epic : epics.values()) {
+            epic.getSubtasks().clear();
         }
     }
 
@@ -253,6 +252,7 @@ public class TaskManager {
 
     /**
      * Проверка статусов всех {@link Subtask} в {@link Epic}
+     *
      * @param epicId Id объекта
      * @return Статус
      */
@@ -302,14 +302,6 @@ public class TaskManager {
                 epics.get(epicId).setStatus(TaskStatus.NEW);
                 break;
         }
-
-//        if (isSubtasksDone(epicId)) {
-//            epics.get(epicId).setStatus(TaskStatus.DONE);
-//        } else if (isEpicInProgress(epicId)) {
-//            epics.get(epicId).setStatus(TaskStatus.IN_PROGRESS);
-//        } else {
-//            epics.get(epicId).setStatus(TaskStatus.NEW);
-//        }
     }
 
     /**
