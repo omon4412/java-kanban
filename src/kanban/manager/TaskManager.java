@@ -2,7 +2,6 @@ package kanban.manager;
 
 import kanban.models.Epic;
 import kanban.models.Subtask;
-import kanban.models.SubtasksStatus;
 import kanban.models.Task;
 
 import java.util.ArrayList;

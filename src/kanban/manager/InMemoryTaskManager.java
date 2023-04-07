@@ -7,7 +7,7 @@ import java.util.Objects;
 import kanban.models.*;
 
 /**
- * Менеджер по управлению классами
+ * Менеджер по управлению задачами
  */
 public class InMemoryTaskManager implements TaskManager {
     private int lastId = 0;
@@ -15,6 +15,11 @@ public class InMemoryTaskManager implements TaskManager {
     private HashMap<Integer, Subtask> subtasks = new HashMap<>();
     private HashMap<Integer, Task> tasks = new HashMap<>();
 
+    private HistoryManager inMemoryHistoryManager = Managers.getDefaultHistory();
+
+    public HistoryManager getInMemoryHistoryManager() {
+        return inMemoryHistoryManager;
+    }
 
     public ArrayList<Epic> getEpics() {
         return new ArrayList<>(epics.values());
@@ -74,7 +79,9 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Epic getEpicById(int epicId) {
         if (epics.containsKey(epicId)) {
-            return new Epic(epics.get(epicId));
+            Epic epic = epics.get(epicId);
+            inMemoryHistoryManager.add(epic);
+            return new Epic(epic);
         }
         return null;
     }
@@ -191,7 +198,9 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Subtask getSubtaskById(int subtaskId) {
         if (subtasks.containsKey(subtaskId)) {
-            return new Subtask(subtasks.get(subtaskId));
+            Subtask subtask = subtasks.get(subtaskId);
+            inMemoryHistoryManager.add(subtask);
+            return new Subtask(subtask);
         }
         return null;
     }
@@ -287,7 +296,9 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Task getTaskById(int taskId) {
         if (tasks.containsKey(taskId)) {
-            return new Task(tasks.get(taskId));
+            Task task = tasks.get(taskId);
+            inMemoryHistoryManager.add(task);
+            return new Task(task);
         }
         return null;
     }

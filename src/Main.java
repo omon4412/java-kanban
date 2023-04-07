@@ -1,4 +1,5 @@
 import kanban.manager.InMemoryTaskManager;
+import kanban.manager.Managers;
 import kanban.models.Epic;
 import kanban.models.Subtask;
 import kanban.models.Task;
@@ -7,7 +8,7 @@ import kanban.models.TaskStatus;
 public class Main {
 
     public static void main(String[] args) {
-        InMemoryTaskManager inMemoryTaskManager = new InMemoryTaskManager();
+        InMemoryTaskManager inMemoryTaskManager = (InMemoryTaskManager) Managers.getDefaultManager();
 
         Task task1 = new Task("task1");
         Task task2 = new Task("task2");
@@ -32,6 +33,23 @@ public class Main {
         int sub1Id = inMemoryTaskManager.addSubtaskToEpic(sub1);
         int sub2Id = inMemoryTaskManager.addSubtaskToEpic(sub2);
         int sub3Id = inMemoryTaskManager.addSubtaskToEpic(sub3);
+
+        inMemoryTaskManager.getTaskById(1);
+        System.out.println(inMemoryTaskManager.getInMemoryHistoryManager());
+        inMemoryTaskManager.getEpicById(3);
+        inMemoryTaskManager.getEpicById(3);
+        inMemoryTaskManager.getEpicById(3);
+        inMemoryTaskManager.getEpicById(3);
+        inMemoryTaskManager.getEpicById(3);
+        inMemoryTaskManager.getEpicById(3);
+        inMemoryTaskManager.getTaskById(1);
+        inMemoryTaskManager.getTaskById(1);
+        inMemoryTaskManager.getEpicById(3);
+        System.out.println(inMemoryTaskManager.getInMemoryHistoryManager());
+        inMemoryTaskManager.getTaskById(1);
+        System.out.println(inMemoryTaskManager.getInMemoryHistoryManager());
+
+        System.out.println(inMemoryTaskManager.getInMemoryHistoryManager().getHistory());
 
         System.out.println(inMemoryTaskManager);
         System.out.println(task1);
