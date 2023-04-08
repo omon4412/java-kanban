@@ -1,5 +1,5 @@
-import kanban.manager.InMemoryTaskManager;
 import kanban.manager.Managers;
+import kanban.manager.TaskManager;
 import kanban.models.Epic;
 import kanban.models.Subtask;
 import kanban.models.Task;
@@ -8,7 +8,8 @@ import kanban.models.TaskStatus;
 public class Main {
 
     public static void main(String[] args) {
-        InMemoryTaskManager inMemoryTaskManager = (InMemoryTaskManager) Managers.getDefaultManager();
+
+        TaskManager inMemoryTaskManager = Managers.getDefaultManager();
 
         Task task1 = new Task("task1");
         Task task2 = new Task("task2");
@@ -35,7 +36,7 @@ public class Main {
         int sub3Id = inMemoryTaskManager.addSubtaskToEpic(sub3);
 
         inMemoryTaskManager.getTaskById(1);
-        System.out.println(inMemoryTaskManager.getInMemoryHistoryManager());
+        System.out.println(inMemoryTaskManager.getHistory());
         inMemoryTaskManager.getEpicById(3);
         inMemoryTaskManager.getEpicById(3);
         inMemoryTaskManager.getEpicById(3);
@@ -45,11 +46,11 @@ public class Main {
         inMemoryTaskManager.getTaskById(1);
         inMemoryTaskManager.getTaskById(1);
         inMemoryTaskManager.getEpicById(3);
-        System.out.println(inMemoryTaskManager.getInMemoryHistoryManager());
+        System.out.println(inMemoryTaskManager.getHistory());
         inMemoryTaskManager.getTaskById(1);
-        System.out.println(inMemoryTaskManager.getInMemoryHistoryManager());
+        System.out.println(inMemoryTaskManager.getHistory());
 
-        System.out.println(inMemoryTaskManager.getInMemoryHistoryManager().getHistory());
+        System.out.println(inMemoryTaskManager.getHistory());
 
         System.out.println(inMemoryTaskManager);
         System.out.println(task1);
@@ -79,10 +80,13 @@ public class Main {
         printData(inMemoryTaskManager, epic1, epic2, sub1Id, sub2Id);
 
         inMemoryTaskManager.clearEpics();
-        printData(inMemoryTaskManager, inMemoryTaskManager.getEpicById(epic1.getId()), inMemoryTaskManager.getEpicById(epic2.getId()), sub1Id, sub2Id);
+        printData(inMemoryTaskManager, inMemoryTaskManager.getEpicById(epic1.getId()),
+                inMemoryTaskManager.getEpicById(epic2.getId()), sub1Id, sub2Id);
+
+
     }
 
-    private static void printData(InMemoryTaskManager inMemoryTaskManager, Epic epic1, Epic epic2, int sub1Id, int sub2Id) {
+    private static void printData(TaskManager inMemoryTaskManager, Epic epic1, Epic epic2, int sub1Id, int sub2Id) {
         System.out.println();
         System.out.println(inMemoryTaskManager);
         System.out.println(epic1);

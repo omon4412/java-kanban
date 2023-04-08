@@ -20,6 +20,7 @@ public class Task {
         this.description = "";
         this.status = status;
     }
+
     public Task(String name, String description, TaskStatus status) {
         this(name, status);
         this.description = description;
@@ -60,7 +61,8 @@ public class Task {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Task task = (Task) o;
-        return id == task.id && Objects.equals(name, task.name) && status == task.status && Objects.equals(description, task.description);
+        return id == task.id && Objects.equals(name, task.name) && status == task.status
+                && Objects.equals(description, task.description);
     }
 
     @Override

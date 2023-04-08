@@ -6,12 +6,9 @@ import kanban.util.LimitedArrayList;
 import java.util.List;
 
 public class InMemoryHistoryManager implements HistoryManager {
-
-    private final int maxSize;
     private List<Task> historyTaskList;
 
     public InMemoryHistoryManager(int maxSize) {
-        this.maxSize = maxSize;
         historyTaskList = new LimitedArrayList<>(maxSize);
     }
 

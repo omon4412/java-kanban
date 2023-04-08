@@ -4,7 +4,7 @@ import kanban.models.Epic;
 import kanban.models.Subtask;
 import kanban.models.Task;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public interface TaskManager {
 
@@ -37,6 +37,7 @@ public interface TaskManager {
      * Полное удаление всех {@link Epic}
      */
     void clearEpics();
+
     /**
      * Получить {@link Epic} по ID
      *
@@ -44,6 +45,7 @@ public interface TaskManager {
      * @return {@link Epic}, null - если не найден
      */
     Epic getEpicById(int epicId);
+
     /**
      * Удаление {@link Subtask} из {@link Epic}
      *
@@ -51,13 +53,15 @@ public interface TaskManager {
      * @return Результат удаления
      */
     boolean clearSubtasksInEpic(int epicId);
+
     /**
      * Получить все {@link Subtask} из {@link Epic}
      *
      * @param epicId Id объекта
      * @return список
      */
-    ArrayList<Subtask> getSubtasksByEpic(int epicId);
+    List<Subtask> getSubtasksByEpic(int epicId);
+
     /**
      * Добавление {@link Subtask} в {@link Epic}
      *
@@ -65,6 +69,7 @@ public interface TaskManager {
      * @return Присвоенный ID
      */
     int addSubtaskToEpic(Subtask subtask);
+
     /**
      * Обновление {@link Subtask}
      *
@@ -72,6 +77,7 @@ public interface TaskManager {
      * @return Результат обновления
      */
     boolean updateSubtask(Subtask subtask);
+
     /**
      * Удаление {@link Subtask}
      *
@@ -79,10 +85,12 @@ public interface TaskManager {
      * @return Результат удаления
      */
     boolean deleteSubtaskById(int subtaskId);
+
     /**
      * Полное удаление всех {@link Subtask}
      */
     void clearSubtasks();
+
     /**
      * Получить {@link Subtask} по ID
      *
@@ -90,6 +98,7 @@ public interface TaskManager {
      * @return {@link Subtask}, null - если не найден
      */
     Subtask getSubtaskById(int subtaskId);
+
     /**
      * Добавление нового {@link Task}
      *
@@ -97,6 +106,7 @@ public interface TaskManager {
      * @return Присвоенный ID
      */
     int addTask(Task task);
+
     /**
      * Обновление {@link Task}
      *
@@ -104,6 +114,7 @@ public interface TaskManager {
      * @return Результат обновления
      */
     boolean updateTask(Task task);
+
     /**
      * Удаление {@link Task}
      *
@@ -111,6 +122,7 @@ public interface TaskManager {
      * @return Результат удаления
      */
     boolean deleteTask(int taskId);
+
     /**
      * Полное удаление всех {@link Task}
      */
@@ -118,8 +130,33 @@ public interface TaskManager {
 
     /**
      * Получить {@link Task} по ID
+     *
      * @param taskId
      * @return
      */
     Task getTaskById(int taskId);
+
+    /**
+     * Получить список эпиков {@link Epic}
+     * @return список эпиков
+     */
+    List<Epic> getEpics();
+
+    /**
+     * Получить список подзадач {@link Subtask}
+     * @return список подзадач
+     */
+    List<Subtask> getSubtasks();
+
+    /**
+     * Получить список задач {@link Task}
+     * @return список задач
+     */
+    List<Task> getTasks();
+
+    /**
+     * Получить список просмотренных задач
+     * @return Список просмотренных задач
+     */
+    List<Task> getHistory();
 }

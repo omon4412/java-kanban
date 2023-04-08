@@ -2,6 +2,7 @@ package kanban.manager;
 
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import kanban.models.*;
@@ -17,19 +18,23 @@ public class InMemoryTaskManager implements TaskManager {
 
     private HistoryManager inMemoryHistoryManager = Managers.getDefaultHistory();
 
-    public HistoryManager getInMemoryHistoryManager() {
-        return inMemoryHistoryManager;
+    @Override
+    public List<Task> getHistory() {
+        return inMemoryHistoryManager.getHistory();
     }
 
-    public ArrayList<Epic> getEpics() {
+    @Override
+    public List<Epic> getEpics() {
         return new ArrayList<>(epics.values());
     }
 
-    public ArrayList<Subtask> getSubtasks() {
+    @Override
+    public List<Subtask> getSubtasks() {
         return new ArrayList<>(subtasks.values());
     }
 
-    public ArrayList<Task> getTasks() {
+    @Override
+    public List<Task> getTasks() {
         return new ArrayList<>(tasks.values());
     }
 
@@ -105,8 +110,8 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public ArrayList<Subtask> getSubtasksByEpic(int epicId) {
-        ArrayList<Subtask> subtasks = new ArrayList<>();
+    public List<Subtask> getSubtasksByEpic(int epicId) {
+        List<Subtask> subtasks = new ArrayList<>();
 
         if (epics.containsKey(epicId)) {
             Epic epic = epics.get(epicId);
@@ -212,7 +217,7 @@ public class InMemoryTaskManager implements TaskManager {
      * @return Статус
      */
     private SubtasksStatus checkEpicForStatus(int epicId) {
-        ArrayList<Subtask> subtasksByEpic = getSubtasksByEpic(epicId);
+        List<Subtask> subtasksByEpic = getSubtasksByEpic(epicId);
         int subtaskCount = subtasksByEpic.size();
         int subtaskDoneCount = 0;
         int subtaskInProgressCount = 0;
