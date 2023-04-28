@@ -67,9 +67,11 @@ public class InMemoryTaskManager implements TaskManager {
             var subtasks = epics.get(epicId).getSubtasks();
             for (Integer subtask : subtasks) {
                 this.subtasks.remove(subtask);
+                inMemoryHistoryManager.remove(subtask);
             }
             epics.get(epicId).getSubtasks().clear();
             epics.remove(epicId);
+            inMemoryHistoryManager.remove(epicId);
             return true;
         }
         return false;
@@ -77,7 +79,13 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void clearEpics() {
+        for (Integer subtask : subtasks.keySet()) {
+            inMemoryHistoryManager.remove(subtask);
+        }
         subtasks.clear();
+        for (Integer epic : epics.keySet()) {
+            inMemoryHistoryManager.remove(epic);
+        }
         epics.clear();
     }
 
@@ -101,6 +109,7 @@ public class InMemoryTaskManager implements TaskManager {
 
         for (int subtask : epic.getSubtasks()) {
             subtasks.remove(subtask);
+            inMemoryHistoryManager.remove(subtask);
         }
 
         epic.getSubtasks().clear();
@@ -180,6 +189,7 @@ public class InMemoryTaskManager implements TaskManager {
             return false;
         }
         subtasks.remove(subtaskId);
+        inMemoryHistoryManager.remove(subtaskId);
         epic.getSubtasks().remove((Integer) subtaskId);
 
         setEpicStatus(epicId);
@@ -193,6 +203,9 @@ public class InMemoryTaskManager implements TaskManager {
             return;
         }
 
+        for (Integer subtask : subtasks.keySet()) {
+            inMemoryHistoryManager.remove(subtask);
+        }
         subtasks.clear();
 
         for (var epic : epics.values()) {
@@ -272,7 +285,6 @@ public class InMemoryTaskManager implements TaskManager {
         return newId;
     }
 
-
     @Override
     public boolean updateTask(Task task) {
         int taskId = task.getId();
@@ -288,6 +300,7 @@ public class InMemoryTaskManager implements TaskManager {
     public boolean deleteTask(int taskId) {
         if (tasks.containsKey(taskId)) {
             tasks.remove(taskId);
+            inMemoryHistoryManager.remove(taskId);
             return true;
         }
         return false;
@@ -295,6 +308,9 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void clearTasks() {
+        for (Integer task : tasks.keySet()) {
+            inMemoryHistoryManager.remove(task);
+        }
         tasks.clear();
     }
 

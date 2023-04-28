@@ -138,24 +138,28 @@ public interface TaskManager {
 
     /**
      * Получить список эпиков {@link Epic}
+     *
      * @return список эпиков
      */
     List<Epic> getEpics();
 
     /**
      * Получить список подзадач {@link Subtask}
+     *
      * @return список подзадач
      */
     List<Subtask> getSubtasks();
 
     /**
      * Получить список задач {@link Task}
+     *
      * @return список задач
      */
     List<Task> getTasks();
 
     /**
      * Получить список просмотренных задач
+     *
      * @return Список просмотренных задач
      */
     List<Task> getHistory();

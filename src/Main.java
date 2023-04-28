@@ -1,9 +1,6 @@
 import kanban.manager.Managers;
 import kanban.manager.TaskManager;
-import kanban.models.Epic;
-import kanban.models.Subtask;
-import kanban.models.Task;
-import kanban.models.TaskStatus;
+import kanban.models.*;
 
 public class Main {
 
@@ -29,7 +26,7 @@ public class Main {
 
         sub1.setEpicId(epic1Id);
         sub2.setEpicId(epic1Id);
-        sub3.setEpicId(epic2Id);
+        sub3.setEpicId(epic1Id);
 
         int sub1Id = inMemoryTaskManager.addSubtaskToEpic(sub1);
         int sub2Id = inMemoryTaskManager.addSubtaskToEpic(sub2);
@@ -38,60 +35,21 @@ public class Main {
         inMemoryTaskManager.getTaskById(1);
         System.out.println(inMemoryTaskManager.getHistory());
         inMemoryTaskManager.getEpicById(3);
-        inMemoryTaskManager.getEpicById(3);
-        inMemoryTaskManager.getEpicById(3);
-        inMemoryTaskManager.getEpicById(3);
-        inMemoryTaskManager.getEpicById(3);
-        inMemoryTaskManager.getEpicById(3);
         inMemoryTaskManager.getTaskById(1);
         inMemoryTaskManager.getTaskById(1);
         inMemoryTaskManager.getEpicById(3);
         System.out.println(inMemoryTaskManager.getHistory());
         inMemoryTaskManager.getTaskById(1);
         System.out.println(inMemoryTaskManager.getHistory());
-
+        inMemoryTaskManager.getSubtaskById(sub3Id);
+        inMemoryTaskManager.getSubtaskById(sub1Id);
+        inMemoryTaskManager.getSubtaskById(sub2Id);
         System.out.println(inMemoryTaskManager.getHistory());
 
-        System.out.println(inMemoryTaskManager);
-        System.out.println(task1);
-        System.out.println(task2);
-        System.out.println(epic1);
-        System.out.println(epic2);
-        System.out.println(sub1);
-        System.out.println(sub2);
-        System.out.println(sub3);
-
-        Subtask sub1Copy = inMemoryTaskManager.getSubtaskById(sub1Id);
-        sub1Copy.setStatus(TaskStatus.DONE);
-        inMemoryTaskManager.updateSubtask(sub1Copy);
-        Subtask sub2Copy = inMemoryTaskManager.getSubtaskById(sub2Id);
-        sub2Copy.setStatus(TaskStatus.DONE);
-        inMemoryTaskManager.updateSubtask(sub2Copy);
-
-        printData(inMemoryTaskManager, epic1, epic2, sub1Id, sub2Id);
-
-        inMemoryTaskManager.deleteTask(task1Id);
-        inMemoryTaskManager.deleteEpicById(epic2Id);
-        inMemoryTaskManager.deleteSubtaskById(sub1Id);
-
-        printData(inMemoryTaskManager, epic1, epic2, sub1Id, sub2Id);
-
-        inMemoryTaskManager.clearSubtasks();
-        printData(inMemoryTaskManager, epic1, epic2, sub1Id, sub2Id);
+        inMemoryTaskManager.deleteSubtaskById(sub2Id);
+        System.out.println(inMemoryTaskManager.getHistory());
 
         inMemoryTaskManager.clearEpics();
-        printData(inMemoryTaskManager, inMemoryTaskManager.getEpicById(epic1.getId()),
-                inMemoryTaskManager.getEpicById(epic2.getId()), sub1Id, sub2Id);
-
-
-    }
-
-    private static void printData(TaskManager inMemoryTaskManager, Epic epic1, Epic epic2, int sub1Id, int sub2Id) {
-        System.out.println();
-        System.out.println(inMemoryTaskManager);
-        System.out.println(epic1);
-        System.out.println(epic2);
-        System.out.println(inMemoryTaskManager.getSubtaskById(sub1Id));
-        System.out.println(inMemoryTaskManager.getSubtaskById(sub2Id));
+        System.out.println(inMemoryTaskManager.getHistory());
     }
 }

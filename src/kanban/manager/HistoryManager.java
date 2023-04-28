@@ -10,11 +10,18 @@ import java.util.List;
 public interface HistoryManager {
 
     /**
-     * Пометить задачу как просотренную
+     * Пометить задачу как просмотренную
      *
      * @param task Задача
      */
     void add(Task task);
+
+    /**
+     * Удалить просмотренную задачу
+     *
+     * @param id Задачи
+     */
+    void remove(int id);
 
     /**
      * Получить список просмотренных задач
