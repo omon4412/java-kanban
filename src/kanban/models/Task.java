@@ -2,12 +2,16 @@ package kanban.models;
 
 import java.util.Objects;
 
-public class Task {
+public class Task implements CsvConvertable{
 
     protected int id = -1;
     protected String name;
     protected TaskStatus status;
     protected String description;
+
+    public Task() {
+        this.description = "";
+    }
 
     public Task(String name) {
         this.name = name;
@@ -78,5 +82,19 @@ public class Task {
                 ", status=" + status +
                 ", description=" + description +
                 '}';
+    }
+
+    @Override
+    public String toCsvString() {
+        return id + "," + TaskType.TASK + "," + name + "," + status + "," + description;
+    }
+
+    @Override
+    public void fromScsString(String csvString) {
+        String[] data = csvString.split(",", 5);
+        this.id = Integer.parseInt(data[0]);
+        this.name = data[2];
+        this.status = TaskStatus.valueOf(data[3]);
+        this.description = data[4];
     }
 }

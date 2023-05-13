@@ -52,4 +52,19 @@ public class Subtask extends Task {
                 ", description=" + description +
                 '}';
     }
+
+    @Override
+    public String toCsvString() {
+        return id + "," + TaskType.SUBTASK + "," + name + "," + status + "," + description + "," + epicId;
+    }
+
+    @Override
+    public void fromScsString(String csvString) {
+        String[] data = csvString.split(",", 6);
+        this.id = Integer.parseInt(data[0]);
+        this.name = data[2];
+        this.status = TaskStatus.valueOf(data[3]);
+        this.description = data[4];
+        this.epicId = Integer.parseInt(data[5]);
+    }
 }

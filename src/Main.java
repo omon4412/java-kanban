@@ -1,15 +1,20 @@
+import kanban.manager.FileBackedTasksManager;
 import kanban.manager.Managers;
 import kanban.manager.TaskManager;
 import kanban.models.*;
+
+import java.io.File;
 
 public class Main {
 
     public static void main(String[] args) {
 
-        TaskManager inMemoryTaskManager = Managers.getDefaultManager();
+        TaskManager inMemoryTaskManager = FileBackedTasksManager.loadFromFile(new File("test.csv"));
 
         Task task1 = new Task("task1");
         Task task2 = new Task("task2");
+
+        System.out.println(task2.toCsvString());
 
         Epic epic1 = new Epic("epic1");
         Epic epic2 = new Epic("epic2", "description");

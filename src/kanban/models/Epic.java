@@ -7,6 +7,10 @@ public class Epic extends Task {
 
     private ArrayList<Integer> subtasksIDs = new ArrayList<>();
 
+    public Epic() {
+        super();
+    }
+
     public Epic(String name) {
         super(name);
         this.description = "";
@@ -49,7 +53,16 @@ public class Epic extends Task {
                 ", description='" + description + '\'' +
                 ", name='" + name + '\'' +
                 ", status=" + status +
-                ", description=" + description +
                 '}';
+    }
+
+    @Override
+    public String toCsvString() {
+        return id + "," + TaskType.EPIC + "," + name + "," + status + "," + description;
+    }
+
+    @Override
+    public void fromScsString(String csvString) {
+        super.fromScsString(csvString);
     }
 }

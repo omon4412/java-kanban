@@ -11,12 +11,12 @@ import kanban.models.*;
  * Менеджер по управлению задачами
  */
 public class InMemoryTaskManager implements TaskManager {
-    private int lastId = 0;
-    private HashMap<Integer, Epic> epics = new HashMap<>();
-    private HashMap<Integer, Subtask> subtasks = new HashMap<>();
-    private HashMap<Integer, Task> tasks = new HashMap<>();
+    protected int lastId = 0;
+    protected HashMap<Integer, Epic> epics = new HashMap<>();
+    protected HashMap<Integer, Subtask> subtasks = new HashMap<>();
+    protected HashMap<Integer, Task> tasks = new HashMap<>();
 
-    private HistoryManager inMemoryHistoryManager = Managers.getDefaultHistory();
+    protected final HistoryManager inMemoryHistoryManager = Managers.getDefaultHistory();
 
     @Override
     public List<Task> getHistory() {
