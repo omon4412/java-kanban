@@ -15,6 +15,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class FileBackedTasksManager extends InMemoryTaskManager {
 
@@ -32,18 +33,18 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     }
 
     /**
-     * Заполение объекта данными из файла
+     * Заполнение менеджера данными из файла
      *
      * @param file - Путь к файлу
-     * @return Объект
+     * @return Объект менеджера {@link TaskManager}
      */
-    static public TaskManager loadFromFile(File file) {
-        FileBackedTasksManager res = new FileBackedTasksManager(file.getAbsolutePath());
+    public static TaskManager loadFromFile(File file) {
+        FileBackedTasksManager tasksManager = new FileBackedTasksManager(file.getAbsolutePath());
 
         try {
-            String[] lines = Files.readString(res.getPath()).split("\n");
+            String[] lines = Files.readString(tasksManager.getPath()).split("\n");
             if (lines.length < 1) {
-                return res;
+                return tasksManager;
             }
 
             String historyLine = lines[lines.length - 1];
@@ -56,51 +57,52 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 switch (TaskType.valueOf(data[1])) {
                     case TASK:
                         Task task = new Task();
-                        task.fromScsString(lines[i]);
-                        res.tasks.put(task.getId(), task);
-                        if (history.contains(task.getId())) {
-                            res.inMemoryHistoryManager.add(task);
-                        }
-                        if (task.getId() > maxId) {
-                            maxId = task.getId();
-                        }
+                        addTaskToManagerAndHistory(task, lines[i], tasksManager.tasks, tasksManager, history);
+                        maxId = Integer.max(maxId, task.getId());
                         break;
                     case EPIC:
                         Epic epic = new Epic();
-                        epic.fromScsString(lines[i]);
-                        res.epics.put(epic.getId(), epic);
-                        if (history.contains(epic.getId())) {
-                            res.inMemoryHistoryManager.add(epic);
-                        }
-                        if (epic.getId() > maxId) {
-                            maxId = epic.getId();
-                        }
+                        addTaskToManagerAndHistory(epic, lines[i], tasksManager.epics, tasksManager, history);
+                        maxId = Integer.max(maxId, epic.getId());
                         break;
                     case SUBTASK:
-                        Subtask sub = new Subtask("");
-                        sub.fromScsString(lines[i]);
-                        var cur_epic = res.epics.get(sub.getEpicId());
+                        Subtask sub = new Subtask();
+                        addTaskToManagerAndHistory(sub, lines[i], tasksManager.subtasks, tasksManager, history);
 
                         int subId = sub.getId();
-                        res.subtasks.put(subId, sub);
-                        cur_epic.getSubtasks().add(subId);
+                        var curEpic = tasksManager.epics.get(sub.getEpicId());
+                        curEpic.getSubtasks().add(subId);
 
-                        if (history.contains(subId)) {
-                            res.inMemoryHistoryManager.add(sub);
-                        }
-                        if (subId > maxId) {
-                            maxId = subId;
-                        }
+                        maxId = Integer.max(maxId, sub.getId());
                         break;
                     default:
                         break;
                 }
-                res.lastId = maxId;
+                tasksManager.lastId = maxId;
             }
         } catch (IOException e) {
             throw new ManagerSaveException(e.getMessage());
         }
-        return res;
+        return tasksManager;
+    }
+
+    /**
+     * Добавление задачи в менеджер задач и в список истории просмотров
+     *
+     * @param task        Задача, которая наследуется от {@link Task}
+     * @param line        csv строка
+     * @param tasksMap    Хеш-таблица с задачами
+     * @param taskManager Менеджер задач
+     * @param history     Список истории просмотров
+     */
+    private static <T extends Task> void addTaskToManagerAndHistory(T task, String line, Map<Integer, T> tasksMap,
+                                                                    FileBackedTasksManager taskManager,
+                                                                    List<Integer> history) {
+        task.fromScsString(line);
+        tasksMap.put(task.getId(), task);
+        if (history.contains(task.getId())) {
+            taskManager.inMemoryHistoryManager.add(task);
+        }
     }
 
     /**

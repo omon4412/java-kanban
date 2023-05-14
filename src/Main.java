@@ -10,6 +10,7 @@ public class Main {
     public static void main(String[] args) {
 
         TaskManager inMemoryTaskManager = FileBackedTasksManager.loadFromFile(new File("test.csv"));
+        System.out.println(inMemoryTaskManager);
 
         Task task1 = new Task("task1");
         Task task2 = new Task("task2");
@@ -54,7 +55,7 @@ public class Main {
         inMemoryTaskManager.deleteSubtaskById(sub2Id);
         System.out.println(inMemoryTaskManager.getHistory());
 
-        inMemoryTaskManager.clearEpics();
+        //inMemoryTaskManager.clearEpics();
         System.out.println(inMemoryTaskManager.getHistory());
     }
 }

@@ -80,7 +80,7 @@ public class Task implements CsvConvertable{
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", status=" + status +
-                ", description=" + description +
+                ", description='" + description + '\'' +
                 '}';
     }
 

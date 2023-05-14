@@ -6,6 +6,10 @@ public class Subtask extends Task {
 
     protected int epicId = -1;
 
+    public Subtask() {
+        super();
+    }
+
     public Subtask(String name) {
         super(name);
     }
@@ -49,7 +53,7 @@ public class Subtask extends Task {
                 ", epicId=" + epicId +
                 ", name='" + name + '\'' +
                 ", status=" + status +
-                ", description=" + description +
+                ", description='" + description + '\'' +
                 '}';
     }
 
@@ -65,6 +69,6 @@ public class Subtask extends Task {
         this.name = data[2];
         this.status = TaskStatus.valueOf(data[3]);
         this.description = data[4];
-        this.epicId = Integer.parseInt(data[5]);
+        this.epicId = Integer.parseInt(data[5].trim());
     }
 }
