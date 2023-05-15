@@ -57,17 +57,25 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 switch (TaskType.valueOf(data[1])) {
                     case TASK:
                         Task task = new Task();
-                        addTaskToManagerAndHistory(task, lines[i], tasksManager.tasks, tasksManager, history);
+
+                        addTaskToManagerAndHistory(task, lines[i],
+                                tasksManager.tasks, tasksManager, history);
+
                         maxId = Integer.max(maxId, task.getId());
                         break;
                     case EPIC:
                         Epic epic = new Epic();
-                        addTaskToManagerAndHistory(epic, lines[i], tasksManager.epics, tasksManager, history);
+
+                        addTaskToManagerAndHistory(epic, lines[i],
+                                tasksManager.epics, tasksManager, history);
+
                         maxId = Integer.max(maxId, epic.getId());
                         break;
                     case SUBTASK:
                         Subtask sub = new Subtask();
-                        addTaskToManagerAndHistory(sub, lines[i], tasksManager.subtasks, tasksManager, history);
+
+                        addTaskToManagerAndHistory(sub, lines[i],
+                                tasksManager.subtasks, tasksManager, history);
 
                         int subId = sub.getId();
                         var curEpic = tasksManager.epics.get(sub.getEpicId());
@@ -95,7 +103,9 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
      * @param taskManager Менеджер задач
      * @param history     Список истории просмотров
      */
-    private static <T extends Task> void addTaskToManagerAndHistory(T task, String line, Map<Integer, T> tasksMap,
+    private static <T extends Task> void addTaskToManagerAndHistory(T task,
+                                                                    String line,
+                                                                    Map<Integer, T> tasksMap,
                                                                     FileBackedTasksManager taskManager,
                                                                     List<Integer> history) {
         task.fromScsString(line);
