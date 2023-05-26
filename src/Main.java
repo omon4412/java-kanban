@@ -9,7 +9,7 @@ public class Main {
 
     public static void main(String[] args) {
 
-        TaskManager inMemoryTaskManager = FileBackedTasksManager.loadFromFile(new File("test.csv"));
+        TaskManager inMemoryTaskManager = FileBackedTasksManager.loadFromFile(new File("resources/test_data.csv"));
         System.out.println(inMemoryTaskManager);
 
         Task task1 = new Task("task1");
