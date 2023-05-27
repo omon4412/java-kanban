@@ -56,6 +56,10 @@ public class CustomLinkedList<T> {
         if (elem == null) return;
 
         if (elem.equals(head)) {
+            if(size == 1){
+                head = null;
+                return;
+            }
             head.next.prev = null;
             head = head.next;
         } else if (elem == tail) {

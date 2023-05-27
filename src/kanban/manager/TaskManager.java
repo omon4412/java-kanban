@@ -132,7 +132,7 @@ public interface TaskManager {
      * Получить {@link Task} по ID
      *
      * @param taskId
-     * @return
+     * @return {@link Task}, null - если не найден
      */
     Task getTaskById(int taskId);
 

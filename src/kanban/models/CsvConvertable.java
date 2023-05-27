@@ -10,7 +10,6 @@ public interface CsvConvertable {
     /**
      * Сериализация объекта из csv-строки
      * @param csvString csv-строка
-     * @return Объект
      */
     void fromScsString(String csvString);
 }

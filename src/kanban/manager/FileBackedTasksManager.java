@@ -240,6 +240,10 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     static String historyToString(HistoryManager manager) {
         var listOfTasks = manager.getHistory();
 
+        if(listOfTasks.size() == 0){
+            return "null";
+        }
+
         StringBuilder resultHistoryString = new StringBuilder();
         for (int i = 0; i < listOfTasks.size(); i++) {
             resultHistoryString.append(listOfTasks.get(i).getId());
@@ -257,7 +261,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
      * @return Список
      */
     static List<Integer> historyFromString(String value) {
-        if (value.equals("")) {
+        if (value.equals("null")) {
             return Collections.emptyList();
         }
         List<Integer> listOfIds = new ArrayList<>();

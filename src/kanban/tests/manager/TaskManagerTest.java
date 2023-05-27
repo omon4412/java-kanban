@@ -1,0 +1,447 @@
+package kanban.tests.manager;
+
+import kanban.manager.TaskManager;
+import kanban.models.Epic;
+import kanban.models.Subtask;
+import kanban.models.Task;
+import kanban.models.TaskStatus;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public abstract class TaskManagerTest<T extends TaskManager> {
+
+    public T manager;
+    public Task task;
+    public Epic epic;
+    public Subtask subtask;
+
+    public abstract T createManager();
+
+    @BeforeEach
+    public void loadManager() {
+        manager = createManager();
+    }
+
+    @BeforeEach
+    public void createTaskEpicSubtask() {
+        task = new Task("Task name", "Task desc", TaskStatus.NEW);
+        epic = new Epic("Epic name", "Epic desc");
+        subtask = new Subtask("Sub name", "Sub desc", TaskStatus.NEW);
+    }
+
+    @Test
+    public void shouldAddTaskAndReturnOne() {
+        int taskId = manager.addTask(task);
+        assertEquals(1, taskId);
+        assertNotNull(manager.getTaskById(1));
+    }
+
+    @Test
+    public void shouldAddTaskAndReturnTwo() {
+        manager.addTask(new Task());
+        int taskId = manager.addTask(task);
+        assertEquals(2, taskId);
+        assertNotNull(manager.getTaskById(2));
+    }
+
+    @Test
+    public void shouldUpdateTask() {
+        manager.addTask(task);
+        String newName = "New name";
+        String newDesc = "New desc";
+        TaskStatus newStatus = TaskStatus.DONE;
+        Task task1 = new Task(newName, newDesc, newStatus);
+        task1.setId(task.getId());
+        boolean res = manager.updateTask(task1);
+
+        assertTrue(res, "Ошибка обновления задачи");
+        assertEquals(newName, manager.getTaskById(task.getId()).getName(), "Имя не обновлено");
+        assertEquals(newStatus, manager.getTaskById(task.getId()).getStatus(), "Статус не обновлён");
+    }
+
+    @Test
+    public void shouldNotUpdateTask() {
+        manager.addTask(task);
+        String newName = "New name";
+        String newDesc = "New desc";
+        TaskStatus newStatus = TaskStatus.DONE;
+        Task task1 = new Task(newName, newDesc, newStatus);
+        task1.setId(777);
+        boolean res = manager.updateTask(task1);
+
+        assertFalse(res);
+    }
+
+    @Test
+    public void shouldDeleteTaskAndRemainZeroTasks() {
+        int taskId = manager.addTask(task);
+        boolean res = manager.deleteTask(taskId);
+
+        assertTrue(res, "Ошибка удаления задачи");
+        assertEquals(0, manager.getTasks().size());
+    }
+
+    @Test
+    public void shouldReturnFalseAfterDeleteTask() {
+        boolean res = manager.deleteTask(777);
+        assertFalse(res, "Задача не должна удаляться");
+    }
+
+    @Test
+    public void shouldDeleteTaskAndRemainOneTasks() {
+        int taskId = manager.addTask(task);
+        manager.addTask(new Task());
+        boolean res = manager.deleteTask(taskId);
+
+        assertTrue(res, "Ошибка удаления задачи");
+        assertEquals(1, manager.getTasks().size());
+    }
+
+    @Test
+    public void shouldDeleteAllTask() {
+        manager.addTask(new Task());
+        manager.addTask(new Task());
+        manager.addTask(new Task());
+        manager.clearTasks();
+
+        assertTrue(manager.getTasks().isEmpty());
+    }
+
+    @Test
+    public void shouldReturnTask() {
+        int taskId = manager.addTask(task);
+        var res = manager.getTaskById(taskId);
+
+        assertNotNull(res, "Задача не найдена");
+        assertEquals(taskId, res.getId());
+    }
+
+    @Test
+    public void shouldReturnNullTask() {
+        var res = manager.getTaskById(777);
+        assertNull(res);
+    }
+
+    @Test
+    public void shouldReturnListOfTask() {
+        manager.addTask(task);
+        Task task1 = new Task();
+        Task task2 = new Task();
+        manager.addTask(task1);
+        manager.addTask(task2);
+        var res = manager.getTasks();
+        List<Task> testList = new ArrayList<>() {{
+            add(task);
+            add(task1);
+            add(task2);
+        }};
+        assertEquals(testList, res);
+    }
+
+    ////////////////////////////////////
+    @Test
+    public void shouldAddEpicAndReturnOne() {
+        int epicId = manager.addEpic(epic);
+        assertEquals(1, epicId);
+        assertNotNull(manager.getEpicById(1));
+    }
+
+    @Test
+    public void shouldAddEpicAndReturnTwo() {
+        manager.addEpic(new Epic());
+        int epicId = manager.addEpic(epic);
+        assertEquals(2, epicId);
+        assertNotNull(manager.getEpicById(2));
+    }
+
+    @Test
+    public void shouldUpdateEpic() {
+        manager.addEpic(epic);
+        String newName = "New name";
+        String newDesc = "New desc";
+        Epic epic1 = new Epic(newName, newDesc);
+        epic1.setId(epic.getId());
+        boolean res = manager.updateEpic(epic1);
+
+        assertTrue(res, "Ошибка обновления эпика");
+        assertEquals(newName, manager.getEpicById(epic.getId()).getName(), "Имя не обновлено");
+        assertEquals(newDesc, manager.getEpicById(epic.getId()).getDescription(), "Статус не обновлён");
+    }
+
+    @Test
+    public void shouldNotUpdateEpic() {
+        manager.addEpic(epic);
+        String newName = "New name";
+        String newDesc = "New desc";
+        Epic epic1 = new Epic(newName, newDesc);
+        epic1.setId(777);
+        boolean res = manager.updateEpic(epic1);
+
+        assertFalse(res);
+    }
+
+    @Test
+    public void shouldDeleteEpicAndRemainZeroEpics() {
+        int epicId = manager.addEpic(epic);
+        boolean res = manager.deleteEpicById(epicId);
+
+        assertTrue(res, "Ошибка удаления задачи");
+        assertEquals(0, manager.getEpics().size());
+    }
+
+    @Test
+    public void shouldReturnFalseAfterDeleteEpic() {
+        boolean res = manager.deleteEpicById(777);
+        assertFalse(res, "Задача не должна удаляться");
+    }
+
+    @Test
+    public void shouldDeleteEpicAndRemainOneEpics() {
+        int epicId = manager.addEpic(epic);
+        manager.addEpic(new Epic());
+        boolean res = manager.deleteEpicById(epicId);
+
+        assertTrue(res, "Ошибка удаления задачи");
+        assertEquals(1, manager.getEpics().size());
+    }
+
+    @Test
+    public void shouldDeleteAllEpic() {
+        manager.addEpic(new Epic());
+        manager.addEpic(new Epic());
+        manager.addEpic(new Epic());
+        manager.clearEpics();
+
+        assertTrue(manager.getEpics().isEmpty());
+    }
+
+    @Test
+    public void shouldReturnEpic() {
+        int epicId = manager.addEpic(epic);
+        var res = manager.getEpicById(epicId);
+
+        assertNotNull(res, "Задача не найдена");
+        assertEquals(epicId, res.getId());
+    }
+
+    @Test
+    public void shouldReturnNullEpic() {
+        var res = manager.getEpicById(777);
+        assertNull(res);
+    }
+
+    @Test
+    public void shouldReturnListOfEpic() {
+        manager.addEpic(epic);
+        Epic epic1 = new Epic();
+        Epic epic2 = new Epic();
+        manager.addEpic(epic1);
+        manager.addEpic(epic2);
+        var res = manager.getEpics();
+        List<Epic> testList = new ArrayList<>() {{
+            add(epic);
+            add(epic1);
+            add(epic2);
+        }};
+        assertEquals(testList, res);
+    }
+
+    /////////////////////
+    @Test
+    public void shouldAddSubtaskAndReturnTwo() {
+        int epicId = manager.addEpic(epic);
+        subtask.setEpicId(epicId);
+        int subId = manager.addSubtaskToEpic(subtask);
+        assertEquals(2, subId);
+        assertNotNull(manager.getSubtaskById(2));
+    }
+
+    @Test
+    public void shouldAddSubtaskAndReturnTree() {
+        int epicId = manager.addEpic(epic);
+        Subtask subtask1 = new Subtask("test");
+        subtask1.setEpicId(epicId);
+        subtask.setEpicId(epicId);
+
+        manager.addSubtaskToEpic(subtask1);
+        int taskId = manager.addSubtaskToEpic(subtask);
+        assertEquals(3, taskId);
+        assertNotNull(manager.getSubtaskById(3));
+    }
+
+    @Test
+    public void shouldNotAddSubtask() {
+        int subId = manager.addSubtaskToEpic(subtask);
+        assertEquals(-1, subId);
+    }
+
+    @Test
+    public void shouldUpdateSubtask() {
+        int epicId = manager.addEpic(epic);
+        subtask.setEpicId(epicId);
+        manager.addSubtaskToEpic(subtask);
+
+        String newName = "New name";
+        String newDesc = "New desc";
+        TaskStatus newStatus = TaskStatus.DONE;
+        Subtask sub1 = new Subtask(newName, newDesc, newStatus);
+
+        sub1.setId(subtask.getId());
+        sub1.setEpicId(subtask.getEpicId());
+        boolean res = manager.updateSubtask(sub1);
+
+        assertTrue(res, "Ошибка обновления подзадачи");
+        assertEquals(newName, manager.getSubtaskById(subtask.getId()).getName(), "Имя не обновлено");
+        assertEquals(newStatus, manager.getSubtaskById(subtask.getId()).getStatus(), "Статус не обновлён");
+        assertEquals(newDesc, manager.getSubtaskById(subtask.getId()).getDescription(), "Описание не обновлено");
+    }
+
+    @Test
+    public void shouldNotUpdateSubtask() {
+        int epicId = manager.addEpic(epic);
+        subtask.setEpicId(epicId);
+        manager.addSubtaskToEpic(subtask);
+        String newName = "New name";
+        Subtask task1 = new Subtask(newName);
+        task1.setId(777);
+        boolean res = manager.updateSubtask(task1);
+
+        assertFalse(res);
+    }
+
+    @Test
+    public void shouldDeleteSubtaskAndRemainZeroSubtasks() {
+        int epicId = manager.addEpic(epic);
+        subtask.setEpicId(epicId);
+        int taskId = manager.addSubtaskToEpic(subtask);
+        boolean res = manager.deleteSubtaskById(taskId);
+
+        assertTrue(res, "Ошибка удаления задачи");
+        assertTrue(manager.getSubtasks().isEmpty());
+    }
+
+    @Test
+    public void shouldReturnFalseAfterDeleteSubtask() {
+        boolean res = manager.deleteSubtaskById(777);
+        assertFalse(res, "Задача не должна удаляться");
+    }
+
+    @Test
+    public void shouldDeleteSubtaskAndRemainOneSubtasks() {
+        int epicId = manager.addEpic(epic);
+        subtask.setEpicId(epicId);
+        int taskId = manager.addSubtaskToEpic(subtask);
+        Subtask subtask1 = new Subtask("test");
+        subtask1.setEpicId(epicId);
+        manager.addSubtaskToEpic(subtask1);
+        boolean res = manager.deleteSubtaskById(taskId);
+
+        assertTrue(res, "Ошибка удаления задачи");
+        assertEquals(1, manager.getSubtasks().size());
+    }
+
+    @Test
+    public void shouldDeleteAllSubtask() {
+        int epicId = manager.addEpic(epic);
+        Subtask subtask1 = new Subtask("test");
+        Subtask subtask2 = new Subtask("test");
+        Subtask subtask3 = new Subtask("test");
+        subtask1.setEpicId(epicId);
+        subtask2.setEpicId(epicId);
+        subtask3.setEpicId(epicId);
+        manager.addSubtaskToEpic(subtask1);
+        manager.addSubtaskToEpic(subtask2);
+        manager.addSubtaskToEpic(subtask3);
+        manager.clearSubtasks();
+
+        assertTrue(manager.getSubtasks().isEmpty());
+    }
+
+    @Test
+    public void shouldReturnSubtask() {
+        int epicId = manager.addEpic(epic);
+        subtask.setEpicId(epicId);
+        int taskId = manager.addSubtaskToEpic(subtask);
+        var res = manager.getSubtaskById(taskId);
+
+        assertNotNull(res, "Задача не найдена");
+        assertEquals(taskId, res.getId());
+    }
+
+    @Test
+    public void shouldReturnNullSubtask() {
+        var res = manager.getSubtaskById(777);
+        assertNull(res);
+    }
+
+    @Test
+    public void shouldReturnListOfSubtask() {
+        int epicId = manager.addEpic(epic);
+        Subtask subtask1 = new Subtask("test");
+        Subtask subtask2 = new Subtask("test");
+        Subtask subtask3 = new Subtask("test");
+        subtask1.setEpicId(epicId);
+        subtask2.setEpicId(epicId);
+        subtask3.setEpicId(epicId);
+        manager.addSubtaskToEpic(subtask1);
+        manager.addSubtaskToEpic(subtask2);
+        manager.addSubtaskToEpic(subtask3);
+        var res = manager.getSubtasks();
+        List<Subtask> testList = new ArrayList<>() {{
+            add(subtask1);
+            add(subtask2);
+            add(subtask3);
+        }};
+        assertEquals(testList, res);
+    }
+
+    @Test
+    public void createEpicAndEpicStatusShouldNew() {
+        assertEquals(TaskStatus.NEW, epic.getStatus());
+    }
+
+    @Test
+    public void createEpicAndSubAndEpicStatusShouldNew() {
+        createEpicTreeSub(TaskStatus.NEW, TaskStatus.NEW, TaskStatus.NEW);
+
+        assertEquals(TaskStatus.NEW, epic.getStatus());
+    }
+
+    @Test
+    public void createEpicAndSubAndEpicStatusShouldDone() {
+        createEpicTreeSub(TaskStatus.DONE, TaskStatus.DONE, TaskStatus.DONE);
+
+        assertEquals(TaskStatus.DONE, epic.getStatus());
+    }
+
+    @Test
+    public void createEpicAndSubAndEpicStatusShouldInProgress() {
+        createEpicTreeSub(TaskStatus.DONE, TaskStatus.NEW, TaskStatus.NEW);
+
+        assertEquals(TaskStatus.IN_PROGRESS, epic.getStatus());
+    }
+    @Test
+    public void createEpicAndSubAndEpicStatusShouldInProgress2() {
+        createEpicTreeSub(TaskStatus.IN_PROGRESS, TaskStatus.IN_PROGRESS, TaskStatus.IN_PROGRESS);
+
+        assertEquals(TaskStatus.IN_PROGRESS, epic.getStatus());
+    }
+
+    public void createEpicTreeSub(TaskStatus ts1, TaskStatus ts2, TaskStatus ts3) {
+        Subtask subtask1 = new Subtask("test", ts1);
+        Subtask subtask2 = new Subtask("test", ts2);
+        Subtask subtask3 = new Subtask("test", ts3);
+        manager.addEpic(epic);
+        subtask1.setEpicId(epic.getId());
+        subtask2.setEpicId(epic.getId());
+        subtask3.setEpicId(epic.getId());
+        manager.addSubtaskToEpic(subtask1);
+        manager.addSubtaskToEpic(subtask2);
+        manager.addSubtaskToEpic(subtask3);
+    }
+}

@@ -97,4 +97,16 @@ public class Task implements CsvConvertable{
         this.status = TaskStatus.valueOf(data[3]);
         this.description = data[4];
     }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
 }
