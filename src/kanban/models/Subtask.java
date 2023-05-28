@@ -1,5 +1,7 @@
 package kanban.models;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class Subtask extends Task {
@@ -14,12 +16,25 @@ public class Subtask extends Task {
         super(name);
     }
 
+    public Subtask(String name, Instant startTime, long duration) {
+        super(name);
+        this.startTime = startTime;
+        this.duration = duration;
+
+    }
+
     public Subtask(String name, TaskStatus status) {
         super(name, status);
     }
 
     public Subtask(String name, String description, TaskStatus status) {
         super(name, description, status);
+    }
+
+    public Subtask(String name, String description, TaskStatus status, Instant startTime, long duration) {
+        super(name, description, status);
+        this.startTime = startTime;
+        this.duration = duration;
     }
 
     public Subtask(Subtask other) {
@@ -59,21 +74,27 @@ public class Subtask extends Task {
                 ", name='" + name + '\'' +
                 ", status=" + status +
                 ", description='" + description + '\'' +
+                ", startTime='" + startTime + '\'' +
+                ", duration=" + duration +
                 '}';
     }
 
     @Override
     public String toCsvString() {
-        return id + "," + TaskType.SUBTASK + "," + name + "," + status + "," + description + "," + epicId;
+        return String.join(",", Integer.toString(id), TaskType.SUBTASK.toString(),
+                name, status.toString(), description, (startTime == null ? "null" : startTime.toString()),
+                Long.toString(duration), Integer.toString(epicId));
     }
 
     @Override
     public void fromScsString(String csvString) {
-        String[] data = csvString.split(",", 6);
+        String[] data = csvString.split(",", 8);
         this.id = Integer.parseInt(data[0]);
         this.name = data[2];
         this.status = TaskStatus.valueOf(data[3]);
         this.description = data[4];
-        this.epicId = Integer.parseInt(data[5].trim());
+        this.startTime = Objects.equals(data[5], "null") ? null : Instant.parse(data[5]);
+        this.duration = Long.parseLong(data[6]);
+        this.epicId = Integer.parseInt(data[7].trim());
     }
 }

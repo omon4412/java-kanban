@@ -1,11 +1,14 @@
 package kanban.models;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Objects;
 
 public class Epic extends Task {
 
     private ArrayList<Integer> subtasksIDs = new ArrayList<>();
+
+    protected Instant endTime;
 
     public Epic() {
         super();
@@ -37,12 +40,13 @@ public class Epic extends Task {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         Epic epic = (Epic) o;
-        return Objects.equals(description, epic.description) && Objects.equals(subtasksIDs, epic.subtasksIDs);
+        return Objects.equals(description, epic.description) && Objects.equals(subtasksIDs, epic.subtasksIDs)
+                && Objects.equals(startTime, epic.startTime) && duration == epic.duration;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), description, subtasksIDs);
+        return Objects.hash(super.hashCode(), subtasksIDs, startTime, duration);
     }
 
     @Override
@@ -53,16 +57,29 @@ public class Epic extends Task {
                 ", description='" + description + '\'' +
                 ", name='" + name + '\'' +
                 ", status=" + status +
+                ", startTime='" + startTime + '\'' +
+                ", duration=" + duration +
                 '}';
     }
 
     @Override
     public String toCsvString() {
-        return id + "," + TaskType.EPIC + "," + name + "," + status + "," + description;
+        return String.join(",", Integer.toString(id), TaskType.EPIC.toString(),
+                name, status.toString(), description, (startTime == null ? "null" : startTime.toString()),
+                Long.toString(duration));
     }
 
     @Override
     public void fromScsString(String csvString) {
         super.fromScsString(csvString);
+    }
+
+    @Override
+    public Instant getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(Instant endTime) {
+        this.endTime = endTime;
     }
 }

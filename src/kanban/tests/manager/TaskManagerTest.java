@@ -8,10 +8,13 @@ import kanban.models.TaskStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public abstract class TaskManagerTest<T extends TaskManager> {
 
@@ -201,7 +204,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    public void shouldDeleteEpicAndRemainOneEpics() {
+    public void shouldDeleteEpicAndRemainOneEpic() {
         int epicId = manager.addEpic(epic);
         manager.addEpic(new Epic());
         boolean res = manager.deleteEpicById(epicId);
@@ -407,32 +410,40 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
     @Test
     public void createEpicAndSubAndEpicStatusShouldNew() {
-        createEpicTreeSub(TaskStatus.NEW, TaskStatus.NEW, TaskStatus.NEW);
+        createEpicThreeSub(TaskStatus.NEW, TaskStatus.NEW, TaskStatus.NEW);
 
         assertEquals(TaskStatus.NEW, epic.getStatus());
     }
 
     @Test
     public void createEpicAndSubAndEpicStatusShouldDone() {
-        createEpicTreeSub(TaskStatus.DONE, TaskStatus.DONE, TaskStatus.DONE);
+        createEpicThreeSub(TaskStatus.DONE, TaskStatus.DONE, TaskStatus.DONE);
 
         assertEquals(TaskStatus.DONE, epic.getStatus());
     }
 
     @Test
+    public void createEpicAndSubAndAfterClearEpicStatusShouldNew() {
+        createEpicThreeSub(TaskStatus.DONE, TaskStatus.DONE, TaskStatus.DONE);
+        manager.clearSubtasks();
+        assertEquals(TaskStatus.NEW, epic.getStatus());
+    }
+
+    @Test
     public void createEpicAndSubAndEpicStatusShouldInProgress() {
-        createEpicTreeSub(TaskStatus.DONE, TaskStatus.NEW, TaskStatus.NEW);
+        createEpicThreeSub(TaskStatus.DONE, TaskStatus.NEW, TaskStatus.NEW);
 
         assertEquals(TaskStatus.IN_PROGRESS, epic.getStatus());
     }
+
     @Test
     public void createEpicAndSubAndEpicStatusShouldInProgress2() {
-        createEpicTreeSub(TaskStatus.IN_PROGRESS, TaskStatus.IN_PROGRESS, TaskStatus.IN_PROGRESS);
+        createEpicThreeSub(TaskStatus.IN_PROGRESS, TaskStatus.IN_PROGRESS, TaskStatus.IN_PROGRESS);
 
         assertEquals(TaskStatus.IN_PROGRESS, epic.getStatus());
     }
 
-    public void createEpicTreeSub(TaskStatus ts1, TaskStatus ts2, TaskStatus ts3) {
+    public void createEpicThreeSub(TaskStatus ts1, TaskStatus ts2, TaskStatus ts3) {
         Subtask subtask1 = new Subtask("test", ts1);
         Subtask subtask2 = new Subtask("test", ts2);
         Subtask subtask3 = new Subtask("test", ts3);
@@ -443,5 +454,165 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         manager.addSubtaskToEpic(subtask1);
         manager.addSubtaskToEpic(subtask2);
         manager.addSubtaskToEpic(subtask3);
+    }
+
+    @Test
+    public void taskShouldBeNullAndZero() {
+        Task task1 = new Task("test", "desc", TaskStatus.DONE);
+        assertNull(task1.getStartTime());
+        assertEquals(0, task1.getDuration());
+    }
+
+    @Test
+    public void taskEndTimeShouldBeNull() {
+        Task task1 = new Task("test", "desc", TaskStatus.DONE);
+        assertNull(task1.getEndTime());
+    }
+
+    @Test
+    public void taskStartTimeShouldBeNotNullDurationIs60EndTimeNotNull() {
+        Instant instant = Instant.now();
+        Task task1 = new Task("test", "desc", TaskStatus.DONE, instant, 60);
+        assertNotNull(task1.getStartTime());
+        assertNotNull(task1.getEndTime());
+        assertEquals(60, task1.getDuration());
+        assertEquals(instant.plusMillis(60 * 1000 * 1000), task1.getEndTime());
+    }
+
+    @Test
+    public void subShouldBeNullAndZero() {
+        Subtask subtask1 = new Subtask("test", "desc", TaskStatus.DONE);
+        assertNull(subtask1.getStartTime());
+        assertEquals(0, subtask1.getDuration());
+    }
+
+    @Test
+    public void subStartTimeShouldBeNotNullDurationIs100EndTimeNotNull() {
+        Instant instant = Instant.now();
+        Subtask task1 = new Subtask("test", "desc", TaskStatus.IN_PROGRESS, instant, 100);
+        assertNotNull(task1.getStartTime());
+        assertNotNull(task1.getEndTime());
+        assertEquals(100, task1.getDuration());
+        assertEquals(instant.plusMillis(100 * 1000 * 1000), task1.getEndTime());
+    }
+
+    @Test
+    public void epicDurationShouldBe11() {
+        Instant now = Instant.now();
+        Subtask subtask1 = new Subtask("test", "desc", TaskStatus.NEW, now, 1);
+        Subtask subtask2 = new Subtask("test", "desc", TaskStatus.NEW, now, 10);
+        manager.addEpic(epic);
+        subtask1.setEpicId(epic.getId());
+        subtask2.setEpicId(epic.getId());
+        manager.addSubtaskToEpic(subtask1);
+        manager.addSubtaskToEpic(subtask2);
+        assertEquals(11, epic.getDuration());
+    }
+
+    @Test
+    public void shouldSetStartAndEndTimeToEpicIfSubNew() {
+        Instant now1 = Instant.now().plusMillis(5000);
+        Instant now2 = Instant.now().plusMillis(10000);
+        Subtask subtask1 = new Subtask("test", "desc", TaskStatus.NEW, now1, 25);
+        Subtask subtask2 = new Subtask("test", "desc", TaskStatus.IN_PROGRESS, now2, 60);
+        manager.addEpic(epic);
+        subtask1.setEpicId(epic.getId());
+        subtask2.setEpicId(epic.getId());
+        manager.addSubtaskToEpic(subtask1);
+        manager.addSubtaskToEpic(subtask2);
+
+        assertEquals(85, epic.getDuration());
+        assertEquals(now1, epic.getStartTime());
+        assertEquals(now2.plusMillis(subtask2.getDuration() * 1000 * 1000), epic.getEndTime());
+    }
+
+    @Test
+    public void shouldSetStartAndEndTimeToEpicIfOneSubDone() {
+        Instant now1 = Instant.now().plusMillis(5000);
+        Instant now2 = Instant.now().plusMillis(10000);
+        Subtask subtask1 = new Subtask("test", "desc", TaskStatus.NEW, now1, 25);
+        Subtask subtask2 = new Subtask("test", "desc", TaskStatus.DONE, now2, 60);
+        manager.addEpic(epic);
+        subtask1.setEpicId(epic.getId());
+        subtask2.setEpicId(epic.getId());
+        manager.addSubtaskToEpic(subtask1);
+        manager.addSubtaskToEpic(subtask2);
+
+        assertEquals(85, epic.getDuration());
+        assertEquals(now1, epic.getStartTime());
+        assertEquals(now1.plusMillis(subtask1.getDuration() * 1000 * 1000), epic.getEndTime());
+    }
+
+    @Test
+    public void shouldSetNullToStartAndEndTimeToEpic() {
+        Instant now1 = Instant.now().plusMillis(5000);
+        Instant now2 = Instant.now().plusMillis(10000);
+        Subtask subtask1 = new Subtask("test", "desc", TaskStatus.NEW, now1, 25);
+        Subtask subtask2 = new Subtask("test", "desc", TaskStatus.DONE, now2, 60);
+        manager.addEpic(epic);
+        subtask1.setEpicId(epic.getId());
+        subtask2.setEpicId(epic.getId());
+        manager.addSubtaskToEpic(subtask1);
+        manager.addSubtaskToEpic(subtask2);
+        manager.clearSubtasks();
+        assertEquals(0, epic.getDuration());
+        assertNull(epic.getStartTime());
+        assertNull(epic.getEndTime());
+    }
+
+    @Test
+    public void shouldRemoveSubtasksFromPrioritizedTasksTree() {
+        Instant now1 = Instant.now().plusMillis(5000);
+        Instant now2 = Instant.now().plusMillis(10000);
+        Subtask subtask1 = new Subtask("test", "desc", TaskStatus.NEW, now1, 25);
+        Subtask subtask2 = new Subtask("test", "desc", TaskStatus.NEW, now2, 60);
+        manager.addEpic(epic);
+        subtask1.setEpicId(epic.getId());
+        subtask2.setEpicId(epic.getId());
+        manager.addSubtaskToEpic(subtask1);
+        manager.addSubtaskToEpic(subtask2);
+
+        assertEquals(2, manager.getPrioritizedTasks().size());
+
+        manager.clearSubtasksInEpic(epic.getId());
+
+        assertTrue(manager.getPrioritizedTasks().isEmpty());
+    }
+
+    @Test
+    public void shouldRemoveSubtasksFromPrioritizedTasksTreeAndRemainOne() {
+        Instant now1 = Instant.now().plusMillis(5000);
+        Instant now2 = Instant.now().plusMillis(10000);
+        Subtask subtask1 = new Subtask("test", "desc", TaskStatus.NEW, now1, 25);
+        Subtask subtask2 = new Subtask("test", "desc", TaskStatus.NEW, now2, 60);
+        manager.addEpic(epic);
+        subtask1.setEpicId(epic.getId());
+        subtask2.setEpicId(epic.getId());
+        manager.addSubtaskToEpic(subtask1);
+        manager.addSubtaskToEpic(subtask2);
+        manager.addTask(task);
+
+        assertEquals(3, manager.getPrioritizedTasks().size());
+        manager.clearSubtasks();
+        assertEquals(1, manager.getPrioritizedTasks().size());
+        assertEquals(task, manager.getPrioritizedTasks().stream().findFirst().get());
+    }
+
+    @Test
+    public void shouldSortLike_Sub2_Sub1_Task() {
+        manager.addTask(task); // third because null
+        Instant now1 = Instant.now().plusMillis(25000);
+        Instant now2 = Instant.now().plusMillis(10000);
+        Subtask subtask1 = new Subtask("test1", "desc", TaskStatus.NEW, now1, 25); // second
+        Subtask subtask2 = new Subtask("test2", "desc", TaskStatus.NEW, now2, 60); // first
+        manager.addEpic(epic);
+        subtask1.setEpicId(epic.getId());
+        subtask2.setEpicId(epic.getId());
+        manager.addSubtaskToEpic(subtask1);
+        manager.addSubtaskToEpic(subtask2);
+
+        String expected = "[" + subtask2.getName() + ", " + subtask1.getName() + ", " + task.getName() + "]";
+        assertEquals(expected, manager.getPrioritizedTasks().stream()
+                .map(Task::getName).collect(Collectors.toList()).toString());
     }
 }

@@ -29,7 +29,7 @@ class FileBackedTasksManagerTest extends TaskManagerTest<FileBackedTasksManager>
 
     @Test
     public void saveAndRestoreData() {
-        createEpicTreeSub(TaskStatus.NEW, TaskStatus.DONE, TaskStatus.DONE);
+        createEpicThreeSub(TaskStatus.NEW, TaskStatus.DONE, TaskStatus.DONE);
         manager.getEpicById(1);
         manager.getEpicById(4);
 
@@ -43,7 +43,7 @@ class FileBackedTasksManagerTest extends TaskManagerTest<FileBackedTasksManager>
 
     @Test
     public void saveAndRestoreDataWithEmptyHistory() {
-        createEpicTreeSub(TaskStatus.NEW, TaskStatus.DONE, TaskStatus.DONE);
+        createEpicThreeSub(TaskStatus.NEW, TaskStatus.DONE, TaskStatus.DONE);
 
         TaskManager newMan = FileBackedTasksManager.loadFromFile(new File(path));
         assertEquals(manager.getEpics().get(0), newMan.getEpics().get(0));

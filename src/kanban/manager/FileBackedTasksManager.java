@@ -122,7 +122,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
 
         try (Writer fileWriter = new FileWriter(this.path.toFile())) {
 
-            fileWriter.write("id,type,name,status,description,epic\n");
+            fileWriter.write("id,type,name,status,description,start_time,duration,epic\n");
             for (var task : super.getTasks()) {
                 fileWriter.write(task.toCsvString() + "\n");
             }
@@ -240,7 +240,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     static String historyToString(HistoryManager manager) {
         var listOfTasks = manager.getHistory();
 
-        if(listOfTasks.size() == 0){
+        if (listOfTasks.size() == 0) {
             return "null";
         }
 

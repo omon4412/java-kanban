@@ -5,6 +5,7 @@ import kanban.models.Subtask;
 import kanban.models.Task;
 
 import java.util.List;
+import java.util.Set;
 
 public interface TaskManager {
 
@@ -163,4 +164,16 @@ public interface TaskManager {
      * @return Список просмотренных задач
      */
     List<Task> getHistory();
+
+    /**
+     * Получить отсортированный по времени список задач
+     *
+     * @return Отсортированный список задач
+     */
+    Set<Task> getPrioritizedTasks();
+
+    /**
+     * Вывести список задач в порядке приоритета
+     */
+    void printPrioritizedTasks();
 }
