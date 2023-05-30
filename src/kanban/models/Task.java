@@ -6,7 +6,7 @@ import java.util.Objects;
 public class Task implements CsvConvertable {
 
     private static final long MILLIS_IN_SECOND = 1_000;
-    private static final long SECOND_IN_MINUTES = 1_000;
+    private static final long SECOND_IN_MINUTES = 60;
 
     protected int id = -1;
     protected String name;

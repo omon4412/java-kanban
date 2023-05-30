@@ -1,10 +1,13 @@
 package kanban.tests.manager;
 
+import kanban.manager.InMemoryTaskManager;
+import kanban.manager.IntersectionDetectedException;
 import kanban.manager.TaskManager;
 import kanban.models.Epic;
 import kanban.models.Subtask;
 import kanban.models.Task;
 import kanban.models.TaskStatus;
+import kanban.util.MathConsts;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -476,7 +479,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         assertNotNull(task1.getStartTime());
         assertNotNull(task1.getEndTime());
         assertEquals(60, task1.getDuration());
-        assertEquals(instant.plusMillis(60 * 1000 * 1000), task1.getEndTime());
+        assertEquals(instant.plusMillis(60 * 60 * 1000), task1.getEndTime());
     }
 
     @Test
@@ -493,14 +496,15 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         assertNotNull(task1.getStartTime());
         assertNotNull(task1.getEndTime());
         assertEquals(100, task1.getDuration());
-        assertEquals(instant.plusMillis(100 * 1000 * 1000), task1.getEndTime());
+        assertEquals(instant.plusMillis(100 * 60 * 1000), task1.getEndTime());
     }
 
     @Test
     public void epicDurationShouldBe11() {
         Instant now = Instant.now();
         Subtask subtask1 = new Subtask("test", "desc", TaskStatus.NEW, now, 1);
-        Subtask subtask2 = new Subtask("test", "desc", TaskStatus.NEW, now, 10);
+        Subtask subtask2 = new Subtask("test", "desc", TaskStatus.NEW,
+                now.plusMillis(1000000000L), 10);
         manager.addEpic(epic);
         subtask1.setEpicId(epic.getId());
         subtask2.setEpicId(epic.getId());
@@ -512,7 +516,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     @Test
     public void shouldSetStartAndEndTimeToEpicIfSubNew() {
         Instant now1 = Instant.now().plusMillis(5000);
-        Instant now2 = Instant.now().plusMillis(10000);
+        Instant now2 = Instant.now().plusMillis(1000000000);
         Subtask subtask1 = new Subtask("test", "desc", TaskStatus.NEW, now1, 25);
         Subtask subtask2 = new Subtask("test", "desc", TaskStatus.IN_PROGRESS, now2, 60);
         manager.addEpic(epic);
@@ -523,13 +527,13 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
         assertEquals(85, epic.getDuration());
         assertEquals(now1, epic.getStartTime());
-        assertEquals(now2.plusMillis(subtask2.getDuration() * 1000 * 1000), epic.getEndTime());
+        assertEquals(now2.plusMillis(subtask2.getDuration() * 60 * 1000), epic.getEndTime());
     }
 
     @Test
     public void shouldSetStartAndEndTimeToEpicIfOneSubDone() {
         Instant now1 = Instant.now().plusMillis(5000);
-        Instant now2 = Instant.now().plusMillis(10000);
+        Instant now2 = Instant.now().plusMillis(10000000000L);
         Subtask subtask1 = new Subtask("test", "desc", TaskStatus.NEW, now1, 25);
         Subtask subtask2 = new Subtask("test", "desc", TaskStatus.DONE, now2, 60);
         manager.addEpic(epic);
@@ -540,13 +544,13 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
         assertEquals(85, epic.getDuration());
         assertEquals(now1, epic.getStartTime());
-        assertEquals(now1.plusMillis(subtask1.getDuration() * 1000 * 1000), epic.getEndTime());
+        assertEquals(now1.plusMillis(subtask1.getDuration() * 60 * 1000), epic.getEndTime());
     }
 
     @Test
     public void shouldSetNullToStartAndEndTimeToEpic() {
         Instant now1 = Instant.now().plusMillis(5000);
-        Instant now2 = Instant.now().plusMillis(10000);
+        Instant now2 = Instant.now().plusMillis(100000000);
         Subtask subtask1 = new Subtask("test", "desc", TaskStatus.NEW, now1, 25);
         Subtask subtask2 = new Subtask("test", "desc", TaskStatus.DONE, now2, 60);
         manager.addEpic(epic);
@@ -563,7 +567,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     @Test
     public void shouldRemoveSubtasksFromPrioritizedTasksTree() {
         Instant now1 = Instant.now().plusMillis(5000);
-        Instant now2 = Instant.now().plusMillis(10000);
+        Instant now2 = Instant.now().plusMillis(1000000000);
         Subtask subtask1 = new Subtask("test", "desc", TaskStatus.NEW, now1, 25);
         Subtask subtask2 = new Subtask("test", "desc", TaskStatus.NEW, now2, 60);
         manager.addEpic(epic);
@@ -582,7 +586,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     @Test
     public void shouldRemoveSubtasksFromPrioritizedTasksTreeAndRemainOne() {
         Instant now1 = Instant.now().plusMillis(5000);
-        Instant now2 = Instant.now().plusMillis(10000);
+        Instant now2 = Instant.now().plusMillis(100000000);
         Subtask subtask1 = new Subtask("test", "desc", TaskStatus.NEW, now1, 25);
         Subtask subtask2 = new Subtask("test", "desc", TaskStatus.NEW, now2, 60);
         manager.addEpic(epic);
@@ -601,7 +605,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     @Test
     public void shouldSortLike_Sub2_Sub1_Task() {
         manager.addTask(task); // third because null
-        Instant now1 = Instant.now().plusMillis(25000);
+        Instant now1 = Instant.now().plusMillis(250000000);
         Instant now2 = Instant.now().plusMillis(10000);
         Subtask subtask1 = new Subtask("test1", "desc", TaskStatus.NEW, now1, 25); // second
         Subtask subtask2 = new Subtask("test2", "desc", TaskStatus.NEW, now2, 60); // first
@@ -614,5 +618,172 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         String expected = "[" + subtask2.getName() + ", " + subtask1.getName() + ", " + task.getName() + "]";
         assertEquals(expected, manager.getPrioritizedTasks().stream()
                 .map(Task::getName).collect(Collectors.toList()).toString());
+    }
+
+    @Test
+    public void createIntervalGridTest() {
+        assertEquals(MathConsts.SECOND_IN_MINUTE * MathConsts.HOURS_IN_DAY
+                        * MathConsts.DAYS_IN_YEAR / InMemoryTaskManager.MINUTES_INTERVAL,
+                manager.getGridWithIntervals().size());
+    }
+
+    @Test
+    public void shouldThrowIntersectException() {
+        Instant now = Instant.now().plusMillis(MathConsts.MINUTE_IN_MILLIS);
+        Instant now2 = Instant.now().plusMillis(MathConsts.MINUTE_IN_MILLIS * 10);
+        Task task1 = new Task("test1", "", now, 20);
+        Task task2 = new Task("test2", "", now2, 10);
+
+        final IntersectionDetectedException exception = assertThrows(
+                IntersectionDetectedException.class,
+                () -> {
+                    {
+                        manager.addTask(task1);
+                        manager.addTask(task2);
+                    }
+                });
+
+        assertEquals("Пересечение между задачами", exception.getMessage());
+    }
+
+    @Test
+    public void shouldSuccessAdded() {
+        Instant now = Instant.now().plusMillis(MathConsts.MINUTE_IN_MILLIS);
+        Instant now2 = Instant.now().plusMillis(MathConsts.MINUTE_IN_MILLIS * 100);
+        Task task1 = new Task("test1", now, 20);
+        Task task2 = new Task("test2", now2, 10);
+
+        manager.addTask(task1);
+        manager.addTask(task2);
+
+        assertEquals(2, manager.getTasks().size());
+    }
+
+    @Test
+    public void shouldDeleteOneTaskFromInterval() {
+        Instant now = Instant.now().plusMillis(MathConsts.MINUTE_IN_MILLIS * 100);
+        Instant now2 = Instant.now().plusMillis(MathConsts.MINUTE_IN_MILLIS * 200);
+        Task task1 = new Task("test1", now, 20);
+        Task task2 = new Task("test2", now2, 10);
+
+        manager.addTask(task1);
+        manager.addTask(task2);
+
+        assertEquals(2, manager.getTasks().size());
+        manager.deleteTask(task1.getId());
+        assertTrue(manager.getGridWithIntervals().get(calculateStartInterval(task1)));
+        assertFalse(manager.getGridWithIntervals().get(calculateStartInterval(task2)));
+    }
+
+    @Test
+    public void shouldDeleteOneSubFromInterval() {
+        Instant now = Instant.now().plusMillis(MathConsts.MINUTE_IN_MILLIS * 100);
+        Instant now2 = Instant.now().plusMillis(MathConsts.MINUTE_IN_MILLIS * 200);
+        Subtask subtask1 = new Subtask("test1", now, 20);
+        Subtask subtask2 = new Subtask("test2", now2, 10);
+        manager.addEpic(epic);
+        subtask1.setEpicId(epic.getId());
+        subtask2.setEpicId(epic.getId());
+        manager.addSubtaskToEpic(subtask1);
+        manager.addSubtaskToEpic(subtask2);
+
+        assertEquals(2, manager.getSubtasks().size());
+        manager.deleteSubtaskById(subtask1.getId());
+        assertTrue(manager.getGridWithIntervals().get(calculateStartInterval(subtask1)));
+        assertFalse(manager.getGridWithIntervals().get(calculateStartInterval(subtask2)));
+    }
+
+    @Test
+    public void shouldClearTasksAndIntervals() {
+        Instant now = Instant.now().plusMillis(MathConsts.MINUTE_IN_MILLIS * 100);
+        Instant now2 = Instant.now().plusMillis(MathConsts.MINUTE_IN_MILLIS * 200);
+        Task task1 = new Task("test1", now, 20);
+        Task task2 = new Task("test2", now2, 10);
+
+        manager.addTask(task1);
+        manager.addTask(task2);
+
+        assertEquals(2, manager.getTasks().size());
+        manager.clearTasks();
+        assertTrue(manager.getGridWithIntervals().get(calculateStartInterval(task1)));
+        assertTrue(manager.getGridWithIntervals().get(calculateStartInterval(task2)));
+    }
+
+    @Test
+    public void shouldClearSubsAndIntervals() {
+        Instant now = Instant.now().plusMillis(MathConsts.MINUTE_IN_MILLIS * 100);
+        Instant now2 = Instant.now().plusMillis(MathConsts.MINUTE_IN_MILLIS * 200);
+        Subtask subtask1 = new Subtask("test1", now, 20);
+        Subtask subtask2 = new Subtask("test2", now2, 10);
+        manager.addEpic(epic);
+        subtask1.setEpicId(epic.getId());
+        subtask2.setEpicId(epic.getId());
+        manager.addSubtaskToEpic(subtask1);
+        manager.addSubtaskToEpic(subtask2);
+
+        assertEquals(2, manager.getSubtasks().size());
+        manager.clearSubtasks();
+        assertTrue(manager.getGridWithIntervals().get(calculateStartInterval(subtask1)));
+        assertTrue(manager.getGridWithIntervals().get(calculateStartInterval(subtask2)));
+    }
+
+    @Test
+    public void shouldClearSubsAndIntervalsWithEpics() {
+        Instant now = Instant.now().plusMillis(MathConsts.MINUTE_IN_MILLIS * 100);
+        Instant now2 = Instant.now().plusMillis(MathConsts.MINUTE_IN_MILLIS * 200);
+        Subtask subtask1 = new Subtask("test1", now, 20);
+        Subtask subtask2 = new Subtask("test2", now2, 10);
+        manager.addEpic(epic);
+        subtask1.setEpicId(epic.getId());
+        subtask2.setEpicId(epic.getId());
+        manager.addSubtaskToEpic(subtask1);
+        manager.addSubtaskToEpic(subtask2);
+
+        assertEquals(2, manager.getSubtasks().size());
+        manager.clearEpics();
+        assertTrue(manager.getGridWithIntervals().get(calculateStartInterval(subtask1)));
+        assertTrue(manager.getGridWithIntervals().get(calculateStartInterval(subtask2)));
+    }
+
+    @Test
+    public void shouldThrowIntersectExceptionWhileUpdateTask() {
+        Instant now = Instant.now().plusMillis(MathConsts.MINUTE_IN_MILLIS);
+        Instant now2 = Instant.now().plusMillis(MathConsts.MINUTE_IN_MILLIS * 10);
+        Task task1 = new Task("test1", "", now, 20);
+        Task task2 = new Task("test2", "", now2, 10);
+        Task task3 = new Task("test3", "", now, 20);
+
+        final IntersectionDetectedException exception = assertThrows(
+                IntersectionDetectedException.class,
+                () -> {
+                    {
+                        manager.addTask(task1);
+                        task3.setId(manager.addTask(task2));
+                        manager.updateTask(task3);
+                    }
+                });
+
+        assertEquals("Пересечение между задачами", exception.getMessage());
+    }
+
+    @Test
+    public void shouldChangeIntervalWhileUpdateTask() {
+        Instant now = Instant.now().plusMillis(MathConsts.MINUTE_IN_MILLIS);
+        Instant now2 = Instant.now().plusMillis(MathConsts.MINUTE_IN_MILLIS * 10);
+        Task task2 = new Task("test2", "", now2, 10);
+        Task task3 = new Task("test3", "",
+                now.plusMillis(MathConsts.MINUTE_IN_MILLIS * 100), 20);
+
+        task3.setId(manager.addTask(task2));
+        assertFalse(manager.getGridWithIntervals().get(calculateStartInterval(task2)));
+        manager.updateTask(task3);
+        assertTrue(manager.getGridWithIntervals().get(calculateStartInterval(task2)));
+        assertFalse(manager.getGridWithIntervals().get(calculateStartInterval(task3)));
+    }
+
+    public long calculateStartInterval(Task task) {
+        return (task.getStartTime().toEpochMilli()
+                - manager.getProgramStartTime()) / MathConsts.MINUTE_IN_MILLIS
+                / InMemoryTaskManager.MINUTES_INTERVAL;
     }
 }

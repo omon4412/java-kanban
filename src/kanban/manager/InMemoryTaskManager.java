@@ -1,20 +1,34 @@
 package kanban.manager;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Objects;
+import java.util.Optional;
 
 import kanban.models.*;
+
+import static kanban.util.MathConsts.*;
 
 /**
  * Менеджер по управлению задачами
  */
 public class InMemoryTaskManager implements TaskManager {
+
+    public static final int MINUTES_INTERVAL = 15;
+
     protected int lastId = 0;
     protected HashMap<Integer, Epic> epics = new HashMap<>();
     protected HashMap<Integer, Subtask> subtasks = new HashMap<>();
     protected HashMap<Integer, Task> tasks = new HashMap<>();
     protected final HistoryManager inMemoryHistoryManager = Managers.getDefaultHistory();
+    protected final Map<Long, Boolean> gridWithIntervals = new HashMap<>();
     protected Set<Task> prioritizedTasks;
+    protected long programStartTime = Instant.now().toEpochMilli();
 
     public InMemoryTaskManager() {
         prioritizedTasks = new TreeSet<>((task1, task2) -> {
@@ -31,6 +45,13 @@ public class InMemoryTaskManager implements TaskManager {
                 return instant1.compareTo(instant2);
             }
         });
+
+        // Количество 15-минутных интервалов в дне
+        int numIntervalsPerYear = DAYS_IN_YEAR * HOURS_IN_DAY * SECOND_IN_MINUTE / MINUTES_INTERVAL;
+
+        for (long i = 0; i < numIntervalsPerYear; i++) {
+            gridWithIntervals.put(i, true); // Интервал свободен
+        }
     }
 
     @Override
@@ -55,6 +76,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public int addEpic(Epic epic) {
+        //checkForIntersection(epic);
         int newId = ++lastId;
         epic.setId(newId);
         epics.put(newId, epic);
@@ -89,9 +111,11 @@ public class InMemoryTaskManager implements TaskManager {
     public boolean deleteEpicById(int epicId) {
         if (epics.containsKey(epicId)) {
             var subtasks = epics.get(epicId).getSubtasks();
+            getSubtasksByEpic(epicId).forEach(prioritizedTasks::remove);
             for (Integer subtask : subtasks) {
                 this.subtasks.remove(subtask);
                 inMemoryHistoryManager.remove(subtask);
+                clearIntervals(this.subtasks.get(subtask));
             }
             epics.get(epicId).getSubtasks().clear();
             epics.remove(epicId);
@@ -105,7 +129,9 @@ public class InMemoryTaskManager implements TaskManager {
     public void clearEpics() {
         for (Integer subtask : subtasks.keySet()) {
             inMemoryHistoryManager.remove(subtask);
+            clearIntervals(subtasks.get(subtask));
         }
+        prioritizedTasks.removeAll(subtasks.values());
         subtasks.clear();
         for (Integer epic : epics.keySet()) {
             inMemoryHistoryManager.remove(epic);
@@ -134,6 +160,7 @@ public class InMemoryTaskManager implements TaskManager {
         getSubtasksByEpic(epicId).forEach(prioritizedTasks::remove);
 
         for (int subtask : epic.getSubtasks()) {
+            clearIntervals(subtasks.get(subtask));
             subtasks.remove(subtask);
             inMemoryHistoryManager.remove(subtask);
         }
@@ -162,6 +189,8 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public int addSubtaskToEpic(Subtask subtask) {
+        checkForIntersection(subtask);
+
         int epicId = subtask.getEpicId();
         var epic = epics.get(epicId);
         if (epic == null) {
@@ -181,10 +210,14 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public boolean updateSubtask(Subtask subtask) {
+        checkForIntersection(subtask);
+
         int subtaskId = subtask.getId();
         if (!subtasks.containsKey(subtaskId)) {
             return false;
         }
+        clearIntervals(subtasks.get(subtaskId));
+        checkForIntersection(subtask);
         subtasks.put(subtaskId, subtask);
 
         int epicId = subtask.getEpicId();
@@ -219,6 +252,7 @@ public class InMemoryTaskManager implements TaskManager {
             return false;
         }
         prioritizedTasks.remove(subtask);
+        clearIntervals(subtasks.get(subtaskId));
         subtasks.remove(subtaskId);
         inMemoryHistoryManager.remove(subtaskId);
         epic.getSubtasks().remove((Integer) subtaskId);
@@ -237,6 +271,7 @@ public class InMemoryTaskManager implements TaskManager {
 
         for (Integer subtask : subtasks.keySet()) {
             inMemoryHistoryManager.remove(subtask);
+            clearIntervals(subtasks.get(subtask));
         }
         prioritizedTasks.removeAll(subtasks.values());
         subtasks.clear();
@@ -329,10 +364,12 @@ public class InMemoryTaskManager implements TaskManager {
         long sumDuration = subtasksByEpic.stream().mapToLong(Subtask::getDuration).sum();
         epics.get(epicId).setDuration(sumDuration);
 
-        Optional<Instant> minInstant = subtasksByEpic.stream().filter(sub -> sub.getStatus() != TaskStatus.DONE)
-                .map(Subtask::getStartTime).filter(Objects::nonNull).min(Instant::compareTo);
-        Optional<Instant> maxInstant = subtasksByEpic.stream().filter(sub -> sub.getStatus() != TaskStatus.DONE)
-                .map(Subtask::getEndTime).filter(Objects::nonNull).max(Instant::compareTo);
+        Optional<Instant> minInstant = subtasksByEpic.stream().
+                filter(sub -> sub.getStatus() != TaskStatus.DONE).map(Subtask::getStartTime).
+                filter(Objects::nonNull).min(Instant::compareTo);
+        Optional<Instant> maxInstant = subtasksByEpic.stream().
+                filter(sub -> sub.getStatus() != TaskStatus.DONE).map(Subtask::getEndTime).
+                filter(Objects::nonNull).max(Instant::compareTo);
 
         epics.get(epicId).setStartTime(minInstant.orElse(null));
         epics.get(epicId).setEndTime(maxInstant.orElse(null));
@@ -340,6 +377,8 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public int addTask(Task task) {
+        checkForIntersection(task);
+
         int newId = ++lastId;
         task.setId(newId);
         tasks.put(newId, task);
@@ -352,7 +391,10 @@ public class InMemoryTaskManager implements TaskManager {
         int taskId = task.getId();
 
         if (tasks.containsKey(taskId)) {
+            clearIntervals(tasks.get(taskId));
+            checkForIntersection(task);
             tasks.put(taskId, task);
+
             return true;
         }
         return false;
@@ -361,6 +403,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public boolean deleteTask(int taskId) {
         if (tasks.containsKey(taskId)) {
+            clearIntervals(tasks.get(taskId));
             prioritizedTasks.remove(tasks.get(taskId));
             tasks.remove(taskId);
             inMemoryHistoryManager.remove(taskId);
@@ -373,6 +416,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void clearTasks() {
         for (Integer task : tasks.keySet()) {
             inMemoryHistoryManager.remove(task);
+            clearIntervals(tasks.get(task));
         }
         prioritizedTasks.removeAll(tasks.values());
         tasks.clear();
@@ -399,25 +443,99 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
+    public Map<Long, Boolean> getGridWithIntervals() {
+        return gridWithIntervals;
+    }
+
+    /**
+     * Проверить пересечения
+     *
+     * @param task Добаляемая задача
+     */
+    protected void checkForIntersection(Task task) {
+        if (task.getStartTime() == null) {
+            return;
+        }
+        var result = isIntervalAvailable(task.getStartTime()
+                .toEpochMilli() - programStartTime, task.getDuration());
+        if (!result) {
+            throw new IntersectionDetectedException("Пересечение между задачами");
+        }
+    }
+
+    /**
+     * Проверить временную сетку на наличие свободных интервалов
+     *
+     * @param startTime Время начала задачи в милисекундах от начала работы программы
+     * @param duration  Продолжительность задачи в минутах
+     * @return Результат наличия свободныйх интервалов
+     */
+    protected boolean isIntervalAvailable(long startTime, long duration) {
+        long newStart = startTime / MINUTE_IN_MILLIS / MINUTES_INTERVAL;
+        // Количество 15-минутных интервалов, занимаемых задачей
+        long numIntervals = duration == MINUTES_INTERVAL ? 1 : duration / MINUTES_INTERVAL + 1;
+        for (long i = newStart; i < newStart + numIntervals; i++) {
+            if (!gridWithIntervals.getOrDefault(i, false)) {
+                return false; // Интервал занят
+            }
+        }
+        for (long i = newStart; i < newStart + numIntervals; i++) {
+            gridWithIntervals.put(i, false); // Заняли интервал
+        }
+        return true;
+    }
+
+    /**
+     * Очистка занятых интервалов
+     *
+     * @param task Задача
+     */
+    protected void clearIntervals(Task task) {
+        if (task.getStartTime() == null) {
+            return;
+        }
+        long newStart = (task.getStartTime().toEpochMilli() - programStartTime)
+                / MINUTE_IN_MILLIS / MINUTES_INTERVAL;
+        long numIntervals = task.getDuration() == MINUTES_INTERVAL
+                ? 1 : task.getDuration() / MINUTES_INTERVAL + 1;
+
+        for (long i = newStart; i < newStart + numIntervals; i++) {
+            gridWithIntervals.put(i, true);
+        }
+    }
+
+    @Override
+    public long getProgramStartTime() {
+        return programStartTime;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         InMemoryTaskManager that = (InMemoryTaskManager) o;
-        return lastId == that.lastId && Objects.equals(epics, that.epics) && Objects.equals(subtasks, that.subtasks) && Objects.equals(tasks, that.tasks);
+        return lastId == that.lastId && programStartTime == that.programStartTime
+                && Objects.equals(epics, that.epics) && Objects.equals(subtasks, that.subtasks)
+                && Objects.equals(tasks, that.tasks) && Objects.equals(inMemoryHistoryManager,
+                that.inMemoryHistoryManager) && Objects.equals(gridWithIntervals,
+                that.gridWithIntervals) && Objects.equals(prioritizedTasks, that.prioritizedTasks);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(lastId, epics, subtasks, tasks);
+        return Objects.hash(lastId, epics, subtasks, tasks,
+                inMemoryHistoryManager, gridWithIntervals, prioritizedTasks, programStartTime);
     }
-
     @Override
     public String toString() {
-        return "InMemoryTaskManager{" +
-                "lastId=" + lastId +
-                ", epics.size()=" + epics.size() +
-                ", subtasks.size()=" + subtasks.size() +
-                ", tasks.size()=" + tasks.size() +
-                '}';
+        return "InMemoryTaskManager{"
+                + "lastId=" + lastId
+                + ", epics.size()=" + epics.size()
+                + ", subtasks=" + subtasks.size()
+                + ", tasks=" + tasks.size()
+                + ", gridWithIntervals=" + gridWithIntervals.size()
+                + ", prioritizedTasks=" + prioritizedTasks.size()
+                + ", programStartTime=" + programStartTime
+                + '}';
     }
 }

@@ -4,7 +4,9 @@ import kanban.models.Epic;
 import kanban.models.Subtask;
 import kanban.models.Task;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public interface TaskManager {
@@ -176,4 +178,15 @@ public interface TaskManager {
      * Вывести список задач в порядке приоритета
      */
     void printPrioritizedTasks();
+
+    /**
+     * Вернуть временную сетку
+     */
+    Map<Long, Boolean> getGridWithIntervals();
+
+    /**
+     * Получить время работы программы по UNIX в милисекундах
+     * @return Время работы программы
+     */
+    long getProgramStartTime();
 }
