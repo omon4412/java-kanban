@@ -1,7 +1,5 @@
-package kanban.tests.manager;
+package kanban.manager;
 
-import kanban.manager.HistoryManager;
-import kanban.manager.InMemoryHistoryManager;
 import kanban.models.Task;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

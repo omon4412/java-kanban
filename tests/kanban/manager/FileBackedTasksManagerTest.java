@@ -1,14 +1,9 @@
-package kanban.tests.manager;
+package kanban.manager;
 
-import kanban.manager.FileBackedTasksManager;
-import kanban.manager.ManagerSaveException;
-import kanban.manager.TaskManager;
-import kanban.models.Subtask;
 import kanban.models.TaskStatus;
 import org.junit.jupiter.api.Test;
 
 import java.io.*;
-import java.nio.file.NoSuchFileException;
 
 import static org.junit.jupiter.api.Assertions.*;
 

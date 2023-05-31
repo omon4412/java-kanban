@@ -1,8 +1,5 @@
-package kanban.tests.manager;
+package kanban.manager;
 
-import kanban.manager.InMemoryTaskManager;
-import kanban.manager.IntersectionDetectedException;
-import kanban.manager.TaskManager;
 import kanban.models.Epic;
 import kanban.models.Subtask;
 import kanban.models.Task;

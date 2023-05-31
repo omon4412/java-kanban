@@ -1,6 +1,4 @@
-package kanban.tests.manager;
-
-import kanban.manager.*;
+package kanban.manager;
 
 class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager> {
 

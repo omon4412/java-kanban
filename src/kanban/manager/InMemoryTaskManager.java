@@ -76,7 +76,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public int addEpic(Epic epic) {
-        //checkForIntersection(epic);
+        checkForIntersection(epic);
         int newId = ++lastId;
         epic.setId(newId);
         epics.put(newId, epic);
@@ -293,88 +293,6 @@ public class InMemoryTaskManager implements TaskManager {
         return null;
     }
 
-    /**
-     * Проверка статусов всех {@link Subtask} в {@link Epic}
-     *
-     * @param epicId Id объекта
-     * @return Статус
-     */
-    private SubtasksStatus checkEpicForStatus(int epicId) {
-        List<Subtask> subtasksByEpic = getSubtasksByEpic(epicId);
-        int subtaskCount = subtasksByEpic.size();
-        int subtaskDoneCount = 0;
-        int subtaskInProgressCount = 0;
-
-        if (subtaskCount == 0) {
-            return SubtasksStatus.NONE_SUBTASKS_DONE_OR_IN_PROGRESS;
-        }
-
-        for (Subtask subtask : subtasksByEpic) {
-            if (subtask.getStatus() == TaskStatus.DONE) {
-                subtaskDoneCount++;
-            }
-            if (subtask.getStatus() == TaskStatus.IN_PROGRESS) {
-                subtaskInProgressCount++;
-            }
-        }
-
-        if (subtaskDoneCount == subtaskCount) {
-            return SubtasksStatus.SUBTASKS_DONE;
-        } else if (subtaskInProgressCount >= 1 || subtaskDoneCount >= 1) {
-            return SubtasksStatus.ONE_IN_PROGRESS;
-        } else {
-            return SubtasksStatus.NONE_SUBTASKS_DONE_OR_IN_PROGRESS;
-        }
-    }
-
-    /**
-     * Установка статуса для {@link Epic}
-     *
-     * @param epicId Id объекта
-     */
-    private void setEpicStatus(int epicId) {
-
-        switch (checkEpicForStatus(epicId)) {
-            case SUBTASKS_DONE:
-                epics.get(epicId).setStatus(TaskStatus.DONE);
-                break;
-            case ONE_IN_PROGRESS:
-                epics.get(epicId).setStatus(TaskStatus.IN_PROGRESS);
-                break;
-            case NONE_SUBTASKS_DONE_OR_IN_PROGRESS:
-                epics.get(epicId).setStatus(TaskStatus.NEW);
-                break;
-        }
-    }
-
-    /**
-     * Установка продолжительности для {@link Epic}
-     *
-     * @param epicId Id объекта
-     */
-    private void setEpicDuration(int epicId) {
-        final List<Subtask> subtasksByEpic = getSubtasksByEpic(epicId);
-
-        if (subtasksByEpic.size() == 0) {
-            epics.get(epicId).setStartTime(null);
-            epics.get(epicId).setEndTime(null);
-            epics.get(epicId).setDuration(0);
-        }
-
-        long sumDuration = subtasksByEpic.stream().mapToLong(Subtask::getDuration).sum();
-        epics.get(epicId).setDuration(sumDuration);
-
-        Optional<Instant> minInstant = subtasksByEpic.stream().
-                filter(sub -> sub.getStatus() != TaskStatus.DONE).map(Subtask::getStartTime).
-                filter(Objects::nonNull).min(Instant::compareTo);
-        Optional<Instant> maxInstant = subtasksByEpic.stream().
-                filter(sub -> sub.getStatus() != TaskStatus.DONE).map(Subtask::getEndTime).
-                filter(Objects::nonNull).max(Instant::compareTo);
-
-        epics.get(epicId).setStartTime(minInstant.orElse(null));
-        epics.get(epicId).setEndTime(maxInstant.orElse(null));
-    }
-
     @Override
     public int addTask(Task task) {
         checkForIntersection(task);
@@ -447,6 +365,93 @@ public class InMemoryTaskManager implements TaskManager {
         return gridWithIntervals;
     }
 
+    @Override
+    public long getProgramStartTime() {
+        return programStartTime;
+    }
+
+    /**
+     * Проверка статусов всех {@link Subtask} в {@link Epic}
+     *
+     * @param epicId Id объекта
+     * @return Статус
+     */
+    protected SubtasksStatus checkEpicForStatus(int epicId) {
+        List<Subtask> subtasksByEpic = getSubtasksByEpic(epicId);
+        int subtaskCount = subtasksByEpic.size();
+        int subtaskDoneCount = 0;
+        int subtaskInProgressCount = 0;
+
+        if (subtaskCount == 0) {
+            return SubtasksStatus.NONE_SUBTASKS_DONE_OR_IN_PROGRESS;
+        }
+
+        for (Subtask subtask : subtasksByEpic) {
+            if (subtask.getStatus() == TaskStatus.DONE) {
+                subtaskDoneCount++;
+            }
+            if (subtask.getStatus() == TaskStatus.IN_PROGRESS) {
+                subtaskInProgressCount++;
+            }
+        }
+
+        if (subtaskDoneCount == subtaskCount) {
+            return SubtasksStatus.SUBTASKS_DONE;
+        } else if (subtaskInProgressCount >= 1 || subtaskDoneCount >= 1) {
+            return SubtasksStatus.ONE_IN_PROGRESS;
+        } else {
+            return SubtasksStatus.NONE_SUBTASKS_DONE_OR_IN_PROGRESS;
+        }
+    }
+
+    /**
+     * Установка статуса для {@link Epic}
+     *
+     * @param epicId Id объекта
+     */
+    protected void setEpicStatus(int epicId) {
+
+        switch (checkEpicForStatus(epicId)) {
+            case SUBTASKS_DONE:
+                epics.get(epicId).setStatus(TaskStatus.DONE);
+                break;
+            case ONE_IN_PROGRESS:
+                epics.get(epicId).setStatus(TaskStatus.IN_PROGRESS);
+                break;
+            case NONE_SUBTASKS_DONE_OR_IN_PROGRESS:
+                epics.get(epicId).setStatus(TaskStatus.NEW);
+                break;
+        }
+    }
+
+    /**
+     * Установка продолжительности для {@link Epic}
+     *
+     * @param epicId Id объекта
+     */
+    protected void setEpicDuration(int epicId) {
+        final List<Subtask> subtasksByEpic = getSubtasksByEpic(epicId);
+
+        if (subtasksByEpic.size() == 0) {
+            epics.get(epicId).setStartTime(null);
+            epics.get(epicId).setEndTime(null);
+            epics.get(epicId).setDuration(0);
+        }
+
+        long sumDuration = subtasksByEpic.stream().mapToLong(Subtask::getDuration).sum();
+        epics.get(epicId).setDuration(sumDuration);
+
+        Optional<Instant> minInstant = subtasksByEpic.stream().
+                filter(sub -> sub.getStatus() != TaskStatus.DONE).map(Subtask::getStartTime).
+                filter(Objects::nonNull).min(Instant::compareTo);
+        Optional<Instant> maxInstant = subtasksByEpic.stream().
+                filter(sub -> sub.getStatus() != TaskStatus.DONE).map(Subtask::getEndTime).
+                filter(Objects::nonNull).max(Instant::compareTo);
+
+        epics.get(epicId).setStartTime(minInstant.orElse(null));
+        epics.get(epicId).setEndTime(maxInstant.orElse(null));
+    }
+
     /**
      * Проверить пересечения
      *
@@ -505,11 +510,6 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public long getProgramStartTime() {
-        return programStartTime;
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -526,6 +526,7 @@ public class InMemoryTaskManager implements TaskManager {
         return Objects.hash(lastId, epics, subtasks, tasks,
                 inMemoryHistoryManager, gridWithIntervals, prioritizedTasks, programStartTime);
     }
+
     @Override
     public String toString() {
         return "InMemoryTaskManager{"
