@@ -65,7 +65,8 @@ public class Epic extends Task {
     @Override
     public String toCsvString() {
         return String.join(",", Integer.toString(id), TaskType.EPIC.toString(),
-                name, status.toString(), description, (startTime == null ? "null" : startTime.toString()),
+                name, status.toString(), description,
+                (startTime == null ? "null" : Long.toString(startTime.toEpochMilli())),
                 Long.toString(duration));
     }
 

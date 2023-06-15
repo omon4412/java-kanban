@@ -1,7 +1,6 @@
 package kanban.models;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class Subtask extends Task {
@@ -82,7 +81,8 @@ public class Subtask extends Task {
     @Override
     public String toCsvString() {
         return String.join(",", Integer.toString(id), TaskType.SUBTASK.toString(),
-                name, status.toString(), description, (startTime == null ? "null" : startTime.toString()),
+                name, status.toString(), description,
+                (startTime == null ? "null" : Long.toString(startTime.toEpochMilli())),
                 Long.toString(duration), Integer.toString(epicId));
     }
 
@@ -93,7 +93,7 @@ public class Subtask extends Task {
         this.name = data[2];
         this.status = TaskStatus.valueOf(data[3]);
         this.description = data[4];
-        this.startTime = Objects.equals(data[5], "null") ? null : Instant.parse(data[5]);
+        this.startTime = Objects.equals(data[5], "null") ? null : Instant.ofEpochMilli(Long.parseLong(data[5]));
         this.duration = Long.parseLong(data[6]);
         this.epicId = Integer.parseInt(data[7].trim());
     }

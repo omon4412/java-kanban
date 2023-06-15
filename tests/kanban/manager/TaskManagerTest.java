@@ -646,7 +646,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     @Test
     public void shouldSuccessAdded() {
         Instant now = Instant.now().plusMillis(MathConsts.MINUTE_IN_MILLIS);
-        Instant now2 = Instant.now().plusMillis(MathConsts.MINUTE_IN_MILLIS * 100);
+        Instant now2 = now.plusMillis(MathConsts.MINUTE_IN_MILLIS * 100);
         Task task1 = new Task("test1", now, 20);
         Task task2 = new Task("test2", now2, 10);
 

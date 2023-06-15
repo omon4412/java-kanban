@@ -32,6 +32,10 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         }
     }
 
+    public FileBackedTasksManager() {
+        path = null;
+    }
+
     /**
      * Заполнение менеджера данными из файла
      *
@@ -58,35 +62,47 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                     case TASK:
                         Task task = new Task();
 
-                        addTaskToManagerAndHistory(task, lines[i],
-                                tasksManager.tasks, tasksManager, history);
+                        addTaskToManager(task, lines[i],
+                                tasksManager.tasks);
 
                         maxId = Integer.max(maxId, task.getId());
+                        tasksManager.prioritizedTasks.add(task);
                         break;
                     case EPIC:
                         Epic epic = new Epic();
 
-                        addTaskToManagerAndHistory(epic, lines[i],
-                                tasksManager.epics, tasksManager, history);
+                        addTaskToManager(epic, lines[i],
+                                tasksManager.epics);
 
                         maxId = Integer.max(maxId, epic.getId());
                         break;
                     case SUBTASK:
                         Subtask sub = new Subtask();
 
-                        addTaskToManagerAndHistory(sub, lines[i],
-                                tasksManager.subtasks, tasksManager, history);
+                        addTaskToManager(sub, lines[i],
+                                tasksManager.subtasks);
 
                         int subId = sub.getId();
                         var curEpic = tasksManager.epics.get(sub.getEpicId());
                         curEpic.getSubtasks().add(subId);
 
                         maxId = Integer.max(maxId, sub.getId());
+                        tasksManager.prioritizedTasks.add(sub);
                         break;
                     default:
                         break;
                 }
                 tasksManager.lastId = maxId;
+
+            }
+            for (int his : history) {
+                if (tasksManager.tasks.get(his) != null) {
+                    tasksManager.inMemoryHistoryManager.add(tasksManager.tasks.get(his));
+                } else if (tasksManager.epics.get(his) != null) {
+                    tasksManager.inMemoryHistoryManager.add(tasksManager.epics.get(his));
+                } else if (tasksManager.subtasks.get(his) != null) {
+                    tasksManager.inMemoryHistoryManager.add(tasksManager.subtasks.get(his));
+                }
             }
         } catch (IOException e) {
             throw new ManagerSaveException(e.getMessage());
@@ -97,28 +113,23 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     /**
      * Добавление задачи в менеджер задач и в список истории просмотров
      *
-     * @param task        Задача, которая наследуется от {@link Task}
-     * @param line        csv строка
-     * @param tasksMap    Хеш-таблица с задачами
-     * @param taskManager Менеджер задач
-     * @param history     Список истории просмотров
+     * @param task     Задача, которая наследуется от {@link Task}
+     * @param line     csv строка
+     * @param tasksMap Хеш-таблица с задачами
+     *                 //* @param taskManager Менеджер задач
+     *                 //* @param history     Список истории просмотров
      */
-    private static <T extends Task> void addTaskToManagerAndHistory(T task,
-                                                                    String line,
-                                                                    Map<Integer, T> tasksMap,
-                                                                    FileBackedTasksManager taskManager,
-                                                                    List<Integer> history) {
+    private static <T extends Task> void addTaskToManager(T task,
+                                                          String line,
+                                                          Map<Integer, T> tasksMap) {
         task.fromScsString(line);
         tasksMap.put(task.getId(), task);
-        if (history.contains(task.getId())) {
-            taskManager.inMemoryHistoryManager.add(task);
-        }
     }
 
     /**
      * Сохранение данных объекта в файл
      */
-    private void save() {
+    protected void save() {
 
         try (Writer fileWriter = new FileWriter(this.path.toFile())) {
 
@@ -237,7 +248,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
      * @param manager Менеджер истории
      * @return Строка
      */
-    static String historyToString(HistoryManager manager) {
+    public static String historyToString(HistoryManager manager) {
         var listOfTasks = manager.getHistory();
 
         if (listOfTasks.size() == 0) {

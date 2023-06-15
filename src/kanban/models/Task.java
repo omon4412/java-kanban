@@ -20,7 +20,6 @@ public class Task implements CsvConvertable {
         this.name = "";
         this.description = "";
         this.status = TaskStatus.NEW;
-        //startTime = Instant.now();
     }
 
     public Task(String name) {
@@ -66,7 +65,7 @@ public class Task implements CsvConvertable {
     }
 
     public Task(Task other) {
-        this(other.name, other.description, other.status);
+        this(other.name, other.description, other.status, other.startTime, other.duration);
         this.id = other.id;
     }
 
@@ -95,14 +94,14 @@ public class Task implements CsvConvertable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Task task = (Task) o;
-        return id == task.id && Objects.equals(name, task.name) && status == task.status
-                && Objects.equals(description, task.description) && duration == task.duration
-                && Objects.equals(startTime, task.startTime);
+        return id == task.id && duration == task.duration
+                && Objects.equals(name, task.name) && status == task.status
+                && Objects.equals(description, task.description) && Objects.equals(startTime, task.startTime);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, status, description, startTime, duration);
+        return Objects.hash(id, name, status, description, duration, startTime);
     }
 
     @Override
@@ -121,7 +120,7 @@ public class Task implements CsvConvertable {
     public String toCsvString() {
         return String.join(",", Integer.toString(id), TaskType.TASK.toString(),
                 name, status.toString(), description,
-                (startTime == null ? "null" : startTime.toString()), Long.toString(duration));
+                (startTime == null ? "null" : Long.toString(startTime.toEpochMilli())), Long.toString(duration));
     }
 
     @Override
@@ -131,7 +130,7 @@ public class Task implements CsvConvertable {
         this.name = data[2];
         this.status = TaskStatus.valueOf(data[3]);
         this.description = data[4];
-        this.startTime = Objects.equals(data[5], "null") ? null : Instant.parse(data[5]);
+        this.startTime = Objects.equals(data[5], "null") ? null : Instant.ofEpochMilli(Long.parseLong(data[5]));
         this.duration = Long.parseLong(data[6]);
     }
 

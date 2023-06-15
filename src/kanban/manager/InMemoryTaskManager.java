@@ -1,14 +1,7 @@
 package kanban.manager;
 
 import java.time.Instant;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import kanban.models.*;
 
@@ -52,6 +45,14 @@ public class InMemoryTaskManager implements TaskManager {
         for (long i = 0; i < numIntervalsPerYear; i++) {
             gridWithIntervals.put(i, true); // Интервал свободен
         }
+    }
+
+    public void setLastId(int lastId) {
+        this.lastId = lastId;
+    }
+
+    public int getLastId() {
+        return lastId;
     }
 
     @Override
@@ -113,9 +114,9 @@ public class InMemoryTaskManager implements TaskManager {
             var subtasks = epics.get(epicId).getSubtasks();
             getSubtasksByEpic(epicId).forEach(prioritizedTasks::remove);
             for (Integer subtask : subtasks) {
-                this.subtasks.remove(subtask);
                 inMemoryHistoryManager.remove(subtask);
                 clearIntervals(this.subtasks.get(subtask));
+                this.subtasks.remove(subtask);
             }
             epics.get(epicId).getSubtasks().clear();
             epics.remove(epicId);
@@ -131,8 +132,12 @@ public class InMemoryTaskManager implements TaskManager {
             inMemoryHistoryManager.remove(subtask);
             clearIntervals(subtasks.get(subtask));
         }
-        prioritizedTasks.removeAll(subtasks.values());
+        List<Subtask> tasksToRemove = new ArrayList<>(subtasks.values());
         subtasks.clear();
+        for (Subtask subtask : tasksToRemove) {
+            deleteSubtaskById(subtask.getId());
+        }
+
         for (Integer epic : epics.keySet()) {
             inMemoryHistoryManager.remove(epic);
         }
@@ -157,7 +162,11 @@ public class InMemoryTaskManager implements TaskManager {
             return false;
         }
 
-        getSubtasksByEpic(epicId).forEach(prioritizedTasks::remove);
+        List<Task> tasksToRemove = new ArrayList<>(subtasks.values());
+
+        for (Task task : tasksToRemove) {
+            prioritizedTasks.remove(task);
+        }
 
         for (int subtask : epic.getSubtasks()) {
             clearIntervals(subtasks.get(subtask));
@@ -273,8 +282,12 @@ public class InMemoryTaskManager implements TaskManager {
             inMemoryHistoryManager.remove(subtask);
             clearIntervals(subtasks.get(subtask));
         }
-        prioritizedTasks.removeAll(subtasks.values());
+        List<Task> tasksToRemove = new ArrayList<>(subtasks.values());
         subtasks.clear();
+
+        for (Task task : tasksToRemove) {
+            prioritizedTasks.remove(task);
+        }
 
         for (var epic : epics.values()) {
             epic.getSubtasks().clear();
@@ -336,8 +349,10 @@ public class InMemoryTaskManager implements TaskManager {
             inMemoryHistoryManager.remove(task);
             clearIntervals(tasks.get(task));
         }
-        prioritizedTasks.removeAll(tasks.values());
+
+        List<Task> tasksToRemove = new ArrayList<>(tasks.values());
         tasks.clear();
+        prioritizedTasks.removeIf(tasksToRemove::contains);
     }
 
     @Override
@@ -461,8 +476,8 @@ public class InMemoryTaskManager implements TaskManager {
         if (task.getStartTime() == null) {
             return;
         }
-        var result = isIntervalAvailable(task.getStartTime()
-                .toEpochMilli() - programStartTime, task.getDuration());
+        var time = task.getStartTime().toEpochMilli() - programStartTime;
+        var result = isIntervalAvailable(time, task.getDuration());
         if (!result) {
             throw new IntersectionDetectedException("Пересечение между задачами");
         }

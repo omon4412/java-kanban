@@ -189,4 +189,7 @@ public interface TaskManager {
      * @return Время работы программы
      */
     long getProgramStartTime();
+
+    void setLastId(int lastId);
+    int getLastId();
 }

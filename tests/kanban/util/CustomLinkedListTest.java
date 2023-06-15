@@ -17,7 +17,7 @@ class CustomLinkedListTest {
     }
 
     @Test
-    void add8and10() {
+    void add8_10and15() {
         list.linkLast(8);
         list.linkLast(10);
         list.linkLast(15);
