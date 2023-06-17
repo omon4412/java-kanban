@@ -9,7 +9,7 @@ import java.net.http.HttpResponse;
 public class KVTaskClient {
     protected URI url;
     protected String apiKey;
-    HttpClient client = HttpClient.newHttpClient();
+    protected HttpClient client = HttpClient.newHttpClient();
 
     public KVTaskClient(String url) {
         this.url = URI.create(url);
@@ -34,8 +34,13 @@ public class KVTaskClient {
             System.out.println("api ключ отсутствует");
             return;
         }
-        HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url + "/save/" + key + "?API_TOKEN=" + apiKey))
-                .POST(HttpRequest.BodyPublishers.ofString(json)).build();
+        URI url = URI.create(this.url + "/save/" + key + "?API_TOKEN=" + apiKey);
+        HttpRequest.BodyPublisher body = HttpRequest.BodyPublishers.ofString(json);
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(url)
+                .POST(body)
+                .build();
+
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             System.out.println(response.statusCode());
@@ -50,8 +55,11 @@ public class KVTaskClient {
         }
 
         try {
-            HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url + "/load/" + key + "?API_TOKEN=" + apiKey))
-                    .GET().build();
+            URI url = URI.create(this.url + "/load/" + key + "?API_TOKEN=" + apiKey);
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(url)
+                    .GET()
+                    .build();
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             System.out.println(response.statusCode());
             return response.body();

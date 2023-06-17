@@ -393,7 +393,10 @@ class HttpTaskServerTest {
         subtask.setEpicId(456456);
         String json = gson.toJson(subtask);
         final HttpRequest.BodyPublisher body = HttpRequest.BodyPublishers.ofString(json);
-        HttpRequest request = HttpRequest.newBuilder().uri(url).POST(body).build();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(url)
+                .POST(body)
+                .build();
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         assertEquals(400, response.statusCode());

@@ -71,10 +71,13 @@ public class HttpTaskServer {
             String path = exchange.getRequestURI().getPath();
             String method = exchange.getRequestMethod();
 
-            if ((path.equals("/tasks/") || (path.equals("/tasks"))) && method.equals("GET")) {
+            if ((path.equals("/tasks/")
+                    || (path.equals("/tasks")))
+                    && method.equals("GET")) {
                 List<Task> prioritizedTasks = new ArrayList<>(taskManager.getPrioritizedTasks());
                 writeResponse(exchange, gson.toJson(prioritizedTasks), HTTP_OK, JSON);
-            } else if (path.equals("/tasks/task/") || path.equals("/tasks/task")) {
+            } else if (path.equals("/tasks/task/")
+                    || path.equals("/tasks/task")) {
                 if (method.equals("GET")) {
                     getTasks(exchange, taskManager, TaskType.TASK);
                     return;
@@ -88,7 +91,8 @@ public class HttpTaskServer {
                     addOrUpdateTasks(exchange, TaskType.TASK, true);
                     return;
                 }
-            } else if (path.equals("/tasks/epic/") || path.equals("/tasks/epic")) {
+            } else if (path.equals("/tasks/epic/")
+                    || path.equals("/tasks/epic")) {
                 if (method.equals("GET")) {
                     getTasks(exchange, taskManager, TaskType.EPIC);
                     return;
@@ -100,7 +104,8 @@ public class HttpTaskServer {
                 } else if (method.equals("PUT")) {
                     addOrUpdateTasks(exchange, TaskType.EPIC, true);
                 }
-            } else if (path.equals("/tasks/subtask/") || path.equals("/tasks/subtask")) {
+            } else if (path.equals("/tasks/subtask/")
+                    || path.equals("/tasks/subtask")) {
                 if (method.equals("GET")) {
                     getTasks(exchange, taskManager, TaskType.SUBTASK);
                     return;
@@ -112,7 +117,9 @@ public class HttpTaskServer {
                 } else if (method.equals("PUT")) {
                     addOrUpdateTasks(exchange, TaskType.SUBTASK, true);
                 }
-            } else if ((path.equals("/tasks/history/") || path.equals("/tasks/history")) && method.equals("GET")) {
+            } else if ((path.equals("/tasks/history/")
+                    || path.equals("/tasks/history"))
+                    && method.equals("GET")) {
                 List<Task> history = new ArrayList<>(taskManager.getHistory());
                 writeResponse(exchange, gson.toJson(history), HTTP_OK, JSON);
             }
